@@ -15,9 +15,10 @@ export function deriveOptionality(rel, startTable, endTable, explicit = {}) {
   const fkFieldIds = getRelationshipFields(rel).map((pair) =>
     onEnd ? pair.endFieldId : pair.startFieldId,
   );
-  const nullable = fkFieldIds.some(
-    (id) => !fkTable?.fields.find((field) => field.id === id)?.notNull,
-  );
+  const nullable = fkFieldIds.some((id) => {
+    const field = fkTable?.fields.find((f) => f.id === id);
+    return !field?.notNull && !field?.primary;
+  });
 
   const parentKey = onEnd ? "startOptional" : "endOptional";
   const fkKey = onEnd ? "endOptional" : "startOptional";

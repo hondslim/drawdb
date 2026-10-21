@@ -41,6 +41,15 @@ Ref: records.corrects_certificate_id > certificates.id`,
     expect(relationships[1]).toMatchObject({ endOptional: true });
   });
 
+  it("treats a primary key FK column as NOT NULL", () => {
+    const { relationships } = fromDBML(
+      `${tables}
+Ref: records.id - certificates.id`,
+      DB.POSTGRES,
+    );
+    expect(relationships[0].endOptional).toBe(false);
+  });
+
   it("derives the parent end when the ref is written parent first", () => {
     const { relationships } = fromDBML(
       `${tables}
