@@ -1,6 +1,7 @@
 import { dbToTypes } from "../data/datatypes";
 import i18n from "../i18n/i18n";
-import { isFunction } from "./utils";
+import { getRelationshipFields, isFunction } from "./utils";
+import { fkOnEnd } from "./relationshipEnds";
 import { qualifiedName, tableKey } from "./schema";
 
 function checkDefault(field, database) {
@@ -319,18 +320,25 @@ export function getIssues(diagram) {
   return issues;
 }
 
-function fkFieldIds(relationship) {
-  if (Array.isArray(relationship.fields) && relationship.fields.length) {
-    return relationship.fields.map((pair) => pair.startFieldId);
-  }
-  return [relationship.startFieldId];
+function fkSide(relationship) {
+  const onEnd = fkOnEnd(relationship.cardinality);
+  return {
+    tableId: onEnd ? relationship.endTableId : relationship.startTableId,
+    referencedTableId: onEnd
+      ? relationship.startTableId
+      : relationship.endTableId,
+    fieldIds: getRelationshipFields(relationship).map((pair) =>
+      onEnd ? pair.endFieldId : pair.startFieldId,
+    ),
+  };
 }
 
 function isHardRelationship(relationship, tablesById) {
   if (relationship.deferrable) return false;
-  const table = tablesById.get(relationship.startTableId);
+  const { tableId, fieldIds } = fkSide(relationship);
+  const table = tablesById.get(tableId);
   if (!table) return false;
-  return fkFieldIds(relationship).every(
+  return fieldIds.every(
     (fieldId) => table.fields.find((f) => f.id === fieldId)?.notNull,
   );
 }
@@ -342,7 +350,8 @@ function findHardCycles(diagram) {
     if (r.startTableId === r.endTableId) return;
     if (!edges.has(r.startTableId) || !edges.has(r.endTableId)) return;
     if (!isHardRelationship(r, tablesById)) return;
-    edges.get(r.startTableId).push(r.endTableId);
+    const { tableId, referencedTableId } = fkSide(r);
+    edges.get(tableId).push(referencedTableId);
   });
 
   const index = new Map();

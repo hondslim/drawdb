@@ -161,6 +161,58 @@ describe("circular relationships", () => {
     ).toEqual([]);
   });
 
+  it("reads the FK side of a ref written parent first", async () => {
+    const { fromDBML } = await import("../importFrom/dbml");
+    const imported = fromDBML(
+      `
+Table records {
+  id int [pk, not null]
+  corrects_certificate_id int
+}
+Table certificates {
+  id int [pk, not null]
+  record_id int [not null]
+}
+Ref: records.id < certificates.record_id
+Ref: certificates.id < records.corrects_certificate_id
+`,
+      DB.POSTGRES,
+    );
+    const diagram = {
+      database: DB.POSTGRES,
+      types: [],
+      enums: [],
+      views: [],
+      ...imported,
+    };
+    expect(getIssues(diagram)).toEqual([]);
+
+    const hard = fromDBML(
+      `
+Table a {
+  id int [pk, not null]
+  b_id int [not null]
+}
+Table b {
+  id int [pk, not null]
+  a_id int [not null]
+}
+Ref: a.id < b.a_id
+Ref: b.id < a.b_id
+`,
+      DB.POSTGRES,
+    );
+    expect(
+      getIssues({
+        database: DB.POSTGRES,
+        types: [],
+        enums: [],
+        views: [],
+        ...hard,
+      }),
+    ).toHaveLength(1);
+  });
+
   it("ignores a self-reference", () => {
     expect(getIssues(cycleDiagram([["a", "a"]]))).toEqual([]);
   });
