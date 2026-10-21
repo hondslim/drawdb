@@ -144,6 +144,11 @@ const en = {
     unique_constraints: "Unique constraints",
     add_unique_constraint: "Add unique constraint",
     checks: "Checks",
+    focus: "Focus",
+    focus_on: "Focus on",
+    hops: "{{count}} hop",
+    hops_other: "{{count}} hops",
+    exit_focus: "Exit (Esc)",
     reload_from_source: "Reload from source",
     external_table: "external",
     external_table_notice:

@@ -11,6 +11,7 @@ import useDiagram from "./useDiagram";
 import useSelect from "./useSelect";
 import useSettings from "./useSettings";
 import useTransform from "./useTransform";
+import useLayout from "./useLayout";
 
 export default function useTableDeepLink() {
   const { search, hash, pathname } = useLocation();
@@ -18,13 +19,14 @@ export default function useTableDeepLink() {
   const { setTransform } = useTransform();
   const { setSelectedElement } = useSelect();
   const { settings } = useSettings();
+  const { setLayout } = useLayout();
   const appliedRef = useRef(null);
 
   useEffect(() => {
     const link = readTableLink(search, hash);
     if (!link) return;
 
-    const key = `${pathname}|${link.table}`;
+    const key = `${pathname}|${link.table}|${link.focus}`;
     if (appliedRef.current === key) return;
 
     const table = findTableByRef(tables, link.table);
@@ -32,6 +34,19 @@ export default function useTableDeepLink() {
     if (!table || !canvas) return;
 
     appliedRef.current = key;
+    setSelectedElement((prev) => ({
+      ...prev,
+      element: ObjectType.TABLE,
+      id: table.id,
+      open: false,
+    }));
+    if (link.focus) {
+      setLayout((prev) => ({
+        ...prev,
+        focus: { tableId: table.id, hops: link.focus },
+      }));
+      return;
+    }
     setTransform(
       transformForTable(
         {
@@ -43,12 +58,6 @@ export default function useTableDeepLink() {
         canvas.getBoundingClientRect(),
       ),
     );
-    setSelectedElement((prev) => ({
-      ...prev,
-      element: ObjectType.TABLE,
-      id: table.id,
-      open: false,
-    }));
   }, [
     search,
     hash,
@@ -58,5 +67,6 @@ export default function useTableDeepLink() {
     settings.showComments,
     setTransform,
     setSelectedElement,
+    setLayout,
   ]);
 }

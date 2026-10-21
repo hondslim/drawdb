@@ -5,19 +5,24 @@ describe("readTableLink", () => {
   it("reads the hash", () => {
     expect(readTableLink("", "#table=digivacc.animals")).toEqual({
       table: "digivacc.animals",
-      focus: false,
+      focus: 0,
     });
   });
 
   it("reads the query parameter, and the hash wins", () => {
     expect(readTableLink("?shareId=X&table=owners", "")).toEqual({
       table: "owners",
-      focus: false,
+      focus: 0,
     });
     expect(readTableLink("?table=owners", "#table=animals&focus=1")).toEqual({
       table: "animals",
-      focus: true,
+      focus: 1,
     });
+  });
+
+  it("reads focus hops between 1 and 3", () => {
+    expect(readTableLink("", "#table=a&focus=3").focus).toBe(3);
+    expect(readTableLink("", "#table=a&focus=9").focus).toBe(0);
   });
 
   it("returns null without a link", () => {

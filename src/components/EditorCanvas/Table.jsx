@@ -67,7 +67,7 @@ export default memo(function Table({
   const [hoveredField, setHoveredField] = useState(null);
   const [hovered, setHovered] = useState(false);
   const [resizeEngaged, setResizeEngaged] = useState(false);
-  const { layout } = useLayout();
+  const { layout, setLayout } = useLayout();
   const { addTable, deleteTable, deleteField, updateTable } = useContext(
     DiagramActionsContext,
   );
@@ -385,6 +385,21 @@ export default memo(function Table({
                           onClick={openEditor}
                         >
                           {t("edit")}
+                        </Button>
+                        <Button
+                          icon={<i className="fa-solid fa-crosshairs" />}
+                          type="tertiary"
+                          theme="borderless"
+                          block
+                          style={{ justifyContent: "flex-start" }}
+                          onClick={() =>
+                            setLayout((prev) => ({
+                              ...prev,
+                              focus: { tableId: tableData.id, hops: 1 },
+                            }))
+                          }
+                        >
+                          {t("focus")}
                         </Button>
                         <Button
                           icon={<IconCopyStroked />}

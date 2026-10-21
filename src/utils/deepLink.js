@@ -10,7 +10,8 @@ export function readTableLink(search, hash) {
   const params = fromHash.has("table") ? fromHash : fromSearch;
   const table = params.get("table");
   if (!table) return null;
-  return { table, focus: params.get("focus") === "1" };
+  const hops = Number.parseInt(params.get("focus") ?? "", 10);
+  return { table, focus: hops >= 1 && hops <= 3 ? hops : 0 };
 }
 
 export function findTableByRef(tables, ref) {

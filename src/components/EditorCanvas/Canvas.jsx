@@ -13,6 +13,9 @@ import {
 } from "../../data/constants";
 import { Toast } from "@douyinfe/semi-ui";
 import Table from "./Table";
+import FocusBar from "./FocusBar";
+import { focusView } from "../../utils/focus";
+import { transformForTable } from "../../utils/deepLink";
 import { hasMultipleSchemas } from "../../utils/schema";
 import View from "./View";
 import Area from "./Area";
@@ -151,9 +154,32 @@ export default function Canvas() {
     elementPointerDownRef.current = { element, type };
   }, []);
 
+  const focused = useMemo(
+    () =>
+      focusView(tables, relationships, layout.focus, {
+        showComments: settings.showComments,
+      }),
+    [tables, relationships, layout.focus, settings.showComments],
+  );
+  const shownTables = focused?.tables ?? tables;
+  const shownRelationships = focused?.relationships ?? relationships;
+
+  const fittedFocusRef = useRef(null);
+  useEffect(() => {
+    const key = focused ? `${layout.focus.tableId}|${layout.focus.hops}` : null;
+    if (fittedFocusRef.current === key) return;
+    fittedFocusRef.current = key;
+    if (!focused) return;
+    const canvas = document.getElementById("canvas");
+    if (!canvas) return;
+    setTransform(
+      transformForTable(focused.bounds, canvas.getBoundingClientRect()),
+    );
+  }, [focused, layout.focus, setTransform]);
+
   const tablesById = useMemo(
-    () => new Map(tables.map((table) => [table.id, table])),
-    [tables],
+    () => new Map(shownTables.map((table) => [table.id, table])),
+    [shownTables],
   );
 
   const showSchemas = useMemo(() => hasMultipleSchemas(tables), [tables]);
@@ -838,16 +864,17 @@ export default function Canvas() {
               />
             </>
           )}
-          {areas.map((a) => (
-            <Area
-              key={a.id}
-              data={a}
-              setResize={setAreaResize}
-              setInitDimensions={setAreaInitDimensions}
-              onPointerDown={handleElementPointerDown}
-            />
-          ))}
-          {relationships.map((e) => (
+          {!focused &&
+            areas.map((a) => (
+              <Area
+                key={a.id}
+                data={a}
+                setResize={setAreaResize}
+                setInitDimensions={setAreaInitDimensions}
+                onPointerDown={handleElementPointerDown}
+              />
+            ))}
+          {shownRelationships.map((e) => (
             <Relationship
               key={e.id}
               data={e}
@@ -856,7 +883,7 @@ export default function Canvas() {
               relationships={relationships}
             />
           ))}
-          {tables.map((table) => (
+          {shownTables.map((table) => (
             <Table
               key={table.id}
               tableData={table}
@@ -871,13 +898,14 @@ export default function Canvas() {
               onPointerDown={handleElementPointerDown}
             />
           ))}
-          {views.map((view) => (
-            <View
-              key={view.id}
-              viewData={view}
-              onPointerDown={handleElementPointerDown}
-            />
-          ))}
+          {!focused &&
+            views.map((view) => (
+              <View
+                key={view.id}
+                viewData={view}
+                onPointerDown={handleElementPointerDown}
+              />
+            ))}
           {linking && (
             <path
               d={`M ${linkingLine.startX} ${linkingLine.startY} L ${linkingLine.endX} ${linkingLine.endY}`}
@@ -887,13 +915,14 @@ export default function Canvas() {
             />
           )}
           <Slot name="svg-overlay" />
-          {notes.map((n) => (
-            <Note
-              key={n.id}
-              data={n}
-              onPointerDown={handleElementPointerDown}
-            />
-          ))}
+          {!focused &&
+            notes.map((n) => (
+              <Note
+                key={n.id}
+                data={n}
+                onPointerDown={handleElementPointerDown}
+              />
+            ))}
           {bulkSelectRect.show && (
             <rect
               {...getRectFromEndpoints(bulkSelectRect)}
@@ -904,6 +933,12 @@ export default function Canvas() {
             />
           )}
         </svg>
+        {focused && (
+          <FocusBar
+            table={tablesById.get(layout.focus.tableId)}
+            count={shownTables.length}
+          />
+        )}
       </div>
       {settings.showDebugCoordinates && (
         <div className="fixed flex flex-col flex-wrap gap-6 bg-[rgba(var(--semi-grey-1),var(--tw-bg-opacity))]/40 border border-color bottom-4 right-4 p-4 rounded-xl backdrop-blur-xs pointer-events-none select-none">

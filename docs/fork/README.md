@@ -14,3 +14,4 @@ Specs and plans for the issues on hondslim/drawdb. One file per issue.
 | #6 Reuse the stored diagram for a shareId              | [06-share-reuse.md](06-share-reuse.md)   |
 | #17 Read-only viewer mode by URL parameter             | [17-viewer-mode.md](17-viewer-mode.md)   |
 | #19 Deep link to a table                               | [19-deep-link.md](19-deep-link.md)       |
+| #18 Focus mode                                         | [18-focus-mode.md](18-focus-mode.md)     |
