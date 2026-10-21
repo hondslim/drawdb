@@ -63,6 +63,7 @@ function matchByName(
 }
 
 function sharesFieldName(parsedTable, baseTable) {
+  if (!!parsedTable.sqlView !== !!baseTable.sqlView) return false;
   const baseNames = new Set((baseTable.fields ?? []).map((f) => f.name));
   return parsedTable.fields.some((field) => baseNames.has(field.name));
 }
@@ -193,6 +194,7 @@ function mergeTable(parsed, base, database) {
     fields: reconcileFields(parsed.fields, base.fields ?? [], database),
     checks: reconcileChecks(parsed.checks, base.checks),
     stub: parsed.stub || undefined,
+    sqlView: parsed.sqlView ?? undefined,
     ...reconcileIndexes(parsed.indices, base),
   };
 }
@@ -227,6 +229,7 @@ function createTable(parsed) {
     uniqueConstraints: [],
     checks: parsed.checks ?? [],
     ...(parsed.stub && { stub: true }),
+    ...(parsed.sqlView && { sqlView: parsed.sqlView }),
     locked: false,
     collapsed: false,
   };
@@ -385,8 +388,19 @@ function sameRelationshipFields(a, b) {
   );
 }
 
-export function reconcileDbml(parsed, base, database) {
-  const baseTables = base?.tables ?? [];
+export function reconcileDbml(
+  parsed,
+  base,
+  database,
+  { keepSqlViews = true } = {},
+) {
+  const allBaseTables = base?.tables ?? [];
+  const keptViews = keepSqlViews
+    ? allBaseTables.filter((table) => table.sqlView)
+    : [];
+  const baseTables = keepSqlViews
+    ? allBaseTables.filter((table) => !table.sqlView)
+    : allBaseTables;
   const matched = matchByName(
     parsed.tables,
     baseTables,
@@ -403,6 +417,7 @@ export function reconcileDbml(parsed, base, database) {
 
   placeNewTables(tables);
   keepFieldlessTables(tables, baseTables);
+  tables.push(...keptViews);
 
   return {
     tables,

@@ -305,6 +305,18 @@ export default memo(function Table({
                 {tableData.name}
               </div>
               <PostgresBadges meta={pgMeta} />
+              {tableData.sqlView && (
+                <Tag
+                  size="small"
+                  color="violet"
+                  className="group-hover:hidden shrink-0 me-3"
+                >
+                  <i className="fa-solid fa-eye me-1" />
+                  {tableData.sqlView.materialized
+                    ? t("materialized_view")
+                    : t("view")}
+                </Tag>
+              )}
               {tableData.stub && (
                 <Tag
                   size="small"

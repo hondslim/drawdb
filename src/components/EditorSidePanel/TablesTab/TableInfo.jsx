@@ -22,6 +22,7 @@ import IndexDetails from "./IndexDetails";
 import UniqueConstraintDetails from "./UniqueConstraintDetails";
 import CheckDetails from "./CheckDetails";
 import PostgresDetails from "./PostgresDetails";
+import SqlViewDetails from "./SqlViewDetails";
 import { useTranslation } from "react-i18next";
 import { SortableList } from "../../SortableList/SortableList";
 import { nanoid } from "nanoid";
@@ -176,6 +177,10 @@ export default function TableInfo({ data }) {
     setShowComment(true);
     setCommentActiveKey("1");
   };
+
+  if (data.sqlView) {
+    return <SqlViewDetails table={data} />;
+  }
 
   if (data.stub) {
     return (

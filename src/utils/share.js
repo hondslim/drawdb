@@ -2,6 +2,7 @@ import { reconcileDbml } from "./dbml/reconcile";
 import { tableKey } from "./schema";
 import { getRelationshipFields } from "./utils";
 import { normalizePostgresMeta } from "./postgresMeta";
+import { placeSqlViews, sqlViewTables } from "./sqlViews";
 
 function parsedField(field) {
   return {
@@ -39,6 +40,7 @@ function parsedTable(table) {
     ],
     checks: table.checks ?? [],
     ...(table.stub && { stub: true }),
+    ...(table.sqlView && { sqlView: table.sqlView }),
   };
 }
 
@@ -97,12 +99,13 @@ function sharedState(share) {
 }
 
 export function mergeShare(share, stored, shareId) {
+  const viewTables = sqlViewTables(share.postgres?.views);
   if (!stored) {
     return {
       ...sharedState(share),
       gistId: shareId,
       loadedFromGistId: shareId,
-      tables: share.tables ?? [],
+      tables: placeSqlViews(share.tables ?? [], viewTables),
       references: share.relationships ?? [],
       enums: share.enums ?? [],
       notes: share.notes ?? [],
@@ -113,18 +116,25 @@ export function mergeShare(share, stored, shareId) {
   }
 
   const reconciled = reconcileDbml(
-    diagramToParsed(share),
+    diagramToParsed({
+      ...share,
+      tables: [...(share.tables ?? []), ...viewTables],
+    }),
     {
       tables: stored.tables ?? [],
       relationships: stored.references ?? [],
       enums: stored.enums ?? [],
     },
     share.database,
+    { keepSqlViews: false },
   );
 
   const storedIds = new Set((stored.tables ?? []).map((table) => table.id));
   const sharedByKey = new Map(
-    (share.tables ?? []).map((table) => [tableKey(table), table]),
+    [...(share.tables ?? []), ...viewTables].map((table) => [
+      tableKey(table),
+      table,
+    ]),
   );
   reconciled.tables.forEach((table) => {
     if (storedIds.has(table.id)) return;

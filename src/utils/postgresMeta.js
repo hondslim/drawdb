@@ -85,7 +85,7 @@ export function metadataForTable(meta, table) {
 }
 
 export function rlsState(meta, table) {
-  if (!meta || table.stub) return null;
+  if (!meta || table.stub || table.sqlView) return null;
   const state = meta.rls?.[postgresTableKey(table)];
   if (!state?.enabled) return "off";
   return state.forced ? "forced" : "enabled";
@@ -122,7 +122,9 @@ export function indexPostgresMeta(meta) {
   );
 
   return (table) =>
-    table.stub ? null : byKey.get(postgresTableKey(table)) ?? NO_METADATA;
+    table.stub || table.sqlView
+      ? null
+      : byKey.get(postgresTableKey(table)) ?? NO_METADATA;
 }
 
 export function functionKey(fn) {

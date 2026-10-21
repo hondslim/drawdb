@@ -231,7 +231,7 @@ export function toDBML(diagram) {
   const allTables = (diagram.tables ?? []).filter(
     (table) => (table.fields ?? []).length > 0,
   );
-  const tables = allTables.filter((table) => !table.stub);
+  const tables = allTables.filter((table) => !table.stub && !table.sqlView);
   const enumNames = enumNameIndex(enums);
 
   return [

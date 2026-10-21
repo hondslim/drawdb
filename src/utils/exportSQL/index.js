@@ -32,14 +32,16 @@ function schemaSQL(diagram) {
 }
 
 function withoutStubTables(diagram) {
-  if (!diagram.tables?.some((table) => table.stub)) return diagram;
+  if (!diagram.tables?.some((table) => table.stub || table.sqlView)) {
+    return diagram;
+  }
   const stubIds = new Set(
     diagram.tables.filter((table) => table.stub).map((table) => table.id),
   );
   const keepsStubReferences = diagram.database === DB.POSTGRES;
   return {
     ...diagram,
-    tables: diagram.tables.filter((table) => !table.stub),
+    tables: diagram.tables.filter((table) => !table.stub && !table.sqlView),
     stubTables: diagram.tables.filter((table) => table.stub),
     references: (diagram.references ?? []).filter(
       (r) =>

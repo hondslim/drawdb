@@ -14,6 +14,7 @@ import {
 import { Toast } from "@douyinfe/semi-ui";
 import Table from "./Table";
 import FocusBar from "./FocusBar";
+import ViewDependencies from "./ViewDependencies";
 import { focusView } from "../../utils/focus";
 import { transformForTable } from "../../utils/deepLink";
 import { hasMultipleSchemas } from "../../utils/schema";
@@ -885,6 +886,11 @@ export default function Canvas() {
                 onPointerDown={handleElementPointerDown}
               />
             ))}
+          <ViewDependencies
+            tables={shownTables}
+            relationships={relationships}
+            showComments={settings.showComments}
+          />
           {shownRelationships.map((e) => (
             <Relationship
               key={e.id}

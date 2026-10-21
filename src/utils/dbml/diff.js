@@ -7,6 +7,7 @@ const TABLE_KEYS = [
   "uniqueConstraints",
   "checks",
   "stub",
+  "sqlView",
 ];
 
 const FIELD_KEYS = [
