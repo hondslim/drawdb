@@ -99,6 +99,8 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
     setSqlHeader,
     postgres,
     setPostgres,
+    diffBase,
+    setDiffBase,
   } = useDiagram();
   const { undoStack, redoStack, setUndoStack, setRedoStack } = useUndoRedo();
   const { t, i18n } = useTranslation();
@@ -216,6 +218,7 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
           views: views,
           sqlHeader: sqlHeader,
           postgres: postgres,
+          diffBase: diffBase,
           pan: transform.pan,
           zoom: transform.zoom,
           loadedFromGistId: loadedFromGistId,
@@ -242,6 +245,7 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
           views: views,
           sqlHeader: sqlHeader,
           postgres: postgres,
+          diffBase: diffBase,
           gistId: gistId ?? "",
           pan: transform.pan,
           zoom: transform.zoom,
@@ -282,6 +286,7 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
     navigate,
     layout.viewer,
     postgres,
+    diffBase,
   ]);
 
   const moveToCloud = useCallback(async () => {
@@ -344,6 +349,7 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
       setViews(diagram.views ?? []);
       setSqlHeader(diagram.sqlHeader ?? "");
       setPostgres(normalizePostgresMeta(diagram.postgres));
+      setDiffBase(diagram.diffBase ?? null);
     };
 
     const resetEditorState = () => {
@@ -356,6 +362,7 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
       setViews([]);
       setSqlHeader("");
       setPostgres(null);
+      setDiffBase(null);
       setUndoStack([]);
       setRedoStack([]);
       setTransform({ zoom: 1, pan: { x: 0, y: 0 } });
@@ -509,6 +516,7 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
     loadedDiagramId,
     cloudOnly,
     setPostgres,
+    setDiffBase,
   ]);
 
   const reloadFromSource = () => {

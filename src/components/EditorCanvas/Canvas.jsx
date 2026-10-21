@@ -15,6 +15,8 @@ import { Toast } from "@douyinfe/semi-ui";
 import Table from "./Table";
 import FocusBar from "./FocusBar";
 import ViewDependencies from "./ViewDependencies";
+import DiffGhosts from "./DiffGhosts";
+import { computeDiff } from "../../utils/schemaDiff";
 import { focusView } from "../../utils/focus";
 import { transformForTable } from "../../utils/deepLink";
 import { hasMultipleSchemas } from "../../utils/schema";
@@ -77,6 +79,7 @@ export default function Canvas() {
     addRelationship,
     database,
     postgres,
+    diffBase,
   } = useDiagram();
   const { setSaveState } = useSaveState();
   const { areas, updateArea } = useAreas();
@@ -191,6 +194,25 @@ export default function Canvas() {
   );
 
   const showSchemas = useMemo(() => hasMultipleSchemas(tables), [tables]);
+  const showDiff = !!diffBase && layout.showDiff;
+  const latestDiagramRef = useRef({ tables, relationships });
+  latestDiagramRef.current = { tables, relationships };
+  const structureKey = useMemo(
+    () =>
+      showDiff
+        ? JSON.stringify([
+            tables.map((table) => ({ ...table, x: 0, y: 0 })),
+            relationships,
+          ])
+        : "",
+    [showDiff, tables, relationships],
+  );
+  const diff = useMemo(
+    () =>
+      structureKey ? computeDiff(diffBase, latestDiagramRef.current) : null,
+    [structureKey, diffBase],
+  );
+
   const pgMetaFor = useMemo(
     () => (database === DB.POSTGRES ? indexPostgresMeta(postgres) : null),
     [database, postgres],
@@ -891,10 +913,12 @@ export default function Canvas() {
             relationships={relationships}
             showComments={settings.showComments}
           />
+          {diff && !focused && <DiffGhosts diff={diff} tables={shownTables} />}
           {shownRelationships.map((e) => (
             <Relationship
               key={e.id}
               data={e}
+              diffStatus={diff?.relationships.get(e.id)}
               startTable={tablesById.get(e.startTableId)}
               endTable={tablesById.get(e.endTableId)}
               relationships={relationships}
@@ -906,6 +930,7 @@ export default function Canvas() {
               tableData={table}
               showSchema={showSchemas}
               pgMeta={pgMetaFor?.(table)}
+              diffInfo={diff?.tables.get(table.id)}
               isSelected={selectedTableIds.has(table.id)}
               zoom={transform.zoom}
               database={database}

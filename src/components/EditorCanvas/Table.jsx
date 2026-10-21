@@ -53,10 +53,21 @@ import {
 import ResizeHandles from "./ResizeHandles";
 import PostgresBadges from "./PostgresBadges";
 
+const DIFF_BORDERS = {
+  added: "border-solid border-green-600",
+  changed: "border-solid border-amber-500",
+};
+
+const DIFF_ROWS = {
+  added: "bg-green-500/25",
+  changed: "bg-amber-400/30",
+};
+
 export default memo(function Table({
   tableData,
   showSchema,
   pgMeta,
+  diffInfo,
   isSelected,
   zoom,
   database,
@@ -267,8 +278,13 @@ export default memo(function Table({
                    ? "border-dashed border-blue-500"
                    : isSelected
                      ? "border-solid border-blue-500"
-                     : borderColor
+                     : DIFF_BORDERS[diffInfo?.status] ?? borderColor
                } ${tableData.stub ? "border-dashed opacity-80" : ""}`}
+          title={
+            diffInfo?.details?.length
+              ? `${t("changed")}: ${diffInfo.details.join(", ")}`
+              : undefined
+          }
           style={{ direction: "ltr" }}
         >
           <div
@@ -304,6 +320,16 @@ export default memo(function Table({
                 )}
                 {tableData.name}
               </div>
+              {diffInfo?.removedFields.length > 0 && (
+                <span
+                  className="group-hover:hidden shrink-0 me-3 text-xs font-bold text-red-600"
+                  title={`${t("removed")}: ${diffInfo.removedFields
+                    .map((f) => f.name)
+                    .join(", ")}`}
+                >
+                  −{diffInfo.removedFields.length}
+                </span>
+              )}
               <PostgresBadges meta={pgMeta} />
               {tableData.sqlView && (
                 <Tag
@@ -510,11 +536,17 @@ export default memo(function Table({
   function field(fieldData, index) {
     const fieldResolved = resolveType(database, fieldData.type);
     const showFieldComment = fieldData.comment && settings.showComments;
+    const fieldDiff = diffInfo?.fields.get(fieldData.id);
     return (
       <div
         className={`${
           index === visibleFields.length - 1 ? "" : "border-b border-gray-400"
-        } group w-full overflow-hidden`}
+        } group w-full overflow-hidden ${DIFF_ROWS[fieldDiff?.status] ?? ""}`}
+        title={
+          fieldDiff
+            ? [t(fieldDiff.status), ...fieldDiff.details].join("\n")
+            : undefined
+        }
         onPointerEnter={(e) => {
           if (!e.isPrimary) return;
 

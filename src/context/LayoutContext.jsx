@@ -12,6 +12,7 @@ const defaultLayout = {
   dbmlEditor: false,
   readOnly: false,
   focus: null,
+  showDiff: true,
 };
 
 export default function LayoutContextProvider({ children }) {

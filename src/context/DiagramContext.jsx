@@ -17,6 +17,7 @@ export default function DiagramContextProvider({ children }) {
   const [relationships, setRelationships] = useState([]);
   const [sqlHeader, setSqlHeaderRaw] = useState("");
   const [postgres, setPostgres] = useState(null);
+  const [diffBase, setDiffBase] = useState(null);
   const { transform } = useTransform();
   const { setUndoStack, setRedoStack } = useUndoRedo();
   const { selectedElement, setSelectedElement } = useSelect();
@@ -357,6 +358,7 @@ export default function DiagramContextProvider({ children }) {
       setDatabase,
       setSqlHeader,
       setPostgres,
+      setDiffBase,
     }),
     [setDatabase, setSqlHeader],
   );
@@ -369,10 +371,11 @@ export default function DiagramContextProvider({ children }) {
       database,
       sqlHeader,
       postgres,
+      diffBase,
       tablesCount: tables.length,
       relationshipsCount: relationships.length,
     }),
-    [actions, tables, relationships, database, sqlHeader, postgres],
+    [actions, tables, relationships, database, sqlHeader, postgres, diffBase],
   );
 
   return (

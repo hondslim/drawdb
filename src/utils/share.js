@@ -101,6 +101,12 @@ function sharedState(share) {
     types: share.types ?? [],
     sqlHeader: share.sqlHeader ?? "",
     postgres: normalizePostgresMeta(share.postgres),
+    diffBase: share.base
+      ? {
+          tables: share.base.tables ?? [],
+          relationships: share.base.relationships ?? [],
+        }
+      : null,
     lastModified: new Date(),
   };
 }

@@ -54,6 +54,7 @@ export const Tab = {
   SQL_HEADER: "8",
   FUNCTIONS: "9",
   GRANTS: "10",
+  CHANGES: "11",
 };
 
 export const ObjectType = {

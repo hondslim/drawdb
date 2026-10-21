@@ -35,6 +35,7 @@ export default memo(function Relationship({
   startTable,
   endTable,
   relationships,
+  diffStatus,
 }) {
   const { layout } = useLayout();
   const { selectedElement, setSelectedElement } = useSelect();
@@ -63,6 +64,7 @@ export default memo(function Relationship({
         endTable={endTable}
         relationships={relationships}
         onEdit={edit}
+        diffStatus={diffStatus}
       />
       <SideSheet
         title={t("edit")}
@@ -95,6 +97,7 @@ const RelationshipPath = memo(function RelationshipPath({
   endTable,
   relationships,
   onEdit,
+  diffStatus,
 }) {
   const { settings } = useSettings();
   const { t } = useTranslation();
@@ -258,6 +261,9 @@ const RelationshipPath = memo(function RelationshipPath({
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
     >
+      {diffStatus && (
+        <title>{[diffStatus.status, ...diffStatus.details].join("\n")}</title>
+      )}
       {/* invisible wider path for better hover ux */}
       <path
         d={d}
@@ -270,7 +276,11 @@ const RelationshipPath = memo(function RelationshipPath({
         ref={pathRef}
         d={d}
         className="relationship-path"
-        style={{ stroke: hovered ? undefined : data.color }}
+        style={{
+          stroke: hovered
+            ? undefined
+            : DIFF_COLORS[diffStatus?.status] ?? data.color,
+        }}
         fill="none"
         cursor="pointer"
       />
@@ -337,6 +347,8 @@ const RelationshipPath = memo(function RelationshipPath({
     </g>
   );
 });
+
+const DIFF_COLORS = { added: "#16a34a", changed: "#d97706" };
 
 function edgeAt(point, inward) {
   return {

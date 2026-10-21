@@ -30,12 +30,15 @@ import DBMLEditor from "./DBMLEditor";
 import SqlHeaderTab from "./SqlHeaderTab";
 import FunctionsTab from "./FunctionsTab";
 import GrantsTab from "./GrantsTab";
+import ChangesTab from "./ChangesTab";
 
 export default function SidePanel({ width, resize, setResize }) {
   const { layout, setLayout } = useLayout();
   const { settings } = useSettings();
   const { selectedElement, setSelectedElement } = useSelect();
-  const { database, tablesCount, relationshipsCount, postgres } = useDiagram();
+  const { database, tablesCount, relationshipsCount, postgres, diffBase } =
+    useDiagram();
+  const hasDiff = !!diffBase;
   const functionsCount = postgres?.functions?.length ?? 0;
   const hasGrants = (postgres?.grants?.length ?? 0) > 0;
   const { areasCount } = useAreas();
@@ -107,6 +110,14 @@ export default function SidePanel({ width, resize, setResize }) {
       });
     }
 
+    if (hasDiff) {
+      tabs.unshift({
+        tab: t("changes"),
+        itemKey: Tab.CHANGES,
+        component: <ChangesTab />,
+      });
+    }
+
     if (database !== DB.GENERIC) {
       tabs.push({
         tab: t("sql_header"),
@@ -128,6 +139,7 @@ export default function SidePanel({ width, resize, setResize }) {
     notesCount,
     functionsCount,
     hasGrants,
+    hasDiff,
   ]);
 
   const fillHeight = selectedElement.currentTab === Tab.SQL_HEADER;
