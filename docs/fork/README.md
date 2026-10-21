@@ -9,3 +9,4 @@ Specs and plans for the issues on hondslim/drawdb. One file per issue.
 | #2 Upgrade the DBML importer to @dbml/core 10.x        | [02-dbml-10.md](02-dbml-10.md)           |
 | #1 Postgres schemas as a table property                | [01-schemas.md](01-schemas.md)           |
 | #3 CHECK constraints                                   | [03-checks.md](03-checks.md)             |
+| #4 Optional vs mandatory relationship ends             | [04-optionality.md](04-optionality.md)   |

@@ -4,6 +4,7 @@ import { arrangeTables } from "../arrangeTables";
 import { getTableWidth, isKeyword } from "../utils";
 import { isInlineEnumType, typeTakesSize } from "./types";
 import { findTable, tableKey } from "../schema";
+import { deriveOptionality } from "../relationshipEnds";
 
 const NEW_TABLE_GAP_X = 80;
 const NEW_TABLE_GAP_Y = 240;
@@ -347,6 +348,15 @@ function reconcileRelationships(
       cardinality: parsed.cardinality,
       updateConstraint: parsed.updateConstraint,
       deleteConstraint: parsed.deleteConstraint,
+      ...deriveOptionality(
+        { cardinality: parsed.cardinality, fields },
+        tables.find((table) => table.id === endpoints.startTableId),
+        tables.find((table) => table.id === endpoints.endTableId),
+        {
+          startOptional: parsed.startOptional,
+          endOptional: parsed.endOptional,
+        },
+      ),
     };
   });
 }

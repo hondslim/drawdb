@@ -32,6 +32,8 @@ const RELATIONSHIP_KEYS = [
   "cardinality",
   "updateConstraint",
   "deleteConstraint",
+  "startOptional",
+  "endOptional",
 ];
 
 function isEqual(a, b) {

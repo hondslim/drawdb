@@ -7,11 +7,7 @@ import {
   Collapse,
   Card,
 } from "@douyinfe/semi-ui";
-import {
-  IconClose,
-  IconDeleteStroked,
-  IconPlus,
-} from "@douyinfe/semi-icons";
+import { IconClose, IconDeleteStroked, IconPlus } from "@douyinfe/semi-icons";
 import {
   Cardinality,
   Constraint,
@@ -147,9 +143,7 @@ export default function RelationshipInfo({ data }) {
 
   const removePair = (index) => {
     if (pairs.length <= 1) return;
-    const newPairs = pairs
-      .filter((_, i) => i !== index)
-      .map((p) => ({ ...p }));
+    const newPairs = pairs.filter((_, i) => i !== index).map((p) => ({ ...p }));
     commitPairs(newPairs, "[remove field]");
   };
 
@@ -213,6 +207,38 @@ export default function RelationshipInfo({ data }) {
     ]);
     setRedoStack([]);
     updateRelationship(data.id, { cardinality: value });
+  };
+
+  const optionalityOptions = [
+    { label: t("unknown"), value: "unknown" },
+    { label: t("optional"), value: "optional" },
+    { label: t("mandatory"), value: "mandatory" },
+  ];
+
+  const optionalityValue = (value) =>
+    value === true ? "optional" : value === false ? "mandatory" : "unknown";
+
+  const changeOptionality = (key, value) => {
+    if (layout.readOnly) return;
+
+    const next =
+      value === "optional" ? true : value === "mandatory" ? false : undefined;
+    setUndoStack((prev) => [
+      ...prev,
+      {
+        action: Action.EDIT,
+        element: ObjectType.RELATIONSHIP,
+        rid: data.id,
+        undo: { [key]: data[key] },
+        redo: { [key]: next },
+        message: t("edit_relationship", {
+          refName: data.name,
+          extra: "[optionality]",
+        }),
+      },
+    ]);
+    setRedoStack([]);
+    updateRelationship(data.id, { [key]: next });
   };
 
   const changeConstraint = (key, value) => {
@@ -300,7 +326,9 @@ export default function RelationshipInfo({ data }) {
           <Input
             value={data.manyLabel}
             placeholder={t("label")}
-            onChange={(value) => updateRelationship(data.id, { manyLabel: value })}
+            onChange={(value) =>
+              updateRelationship(data.id, { manyLabel: value })
+            }
             onFocus={(e) => setEditField({ manyLabel: e.target.value })}
             readonly={layout.readOnly}
             onBlur={(e) => {
@@ -325,6 +353,28 @@ export default function RelationshipInfo({ data }) {
           />
         </>
       )}
+
+      <div className="font-semibold mt-3 mb-1">{t("optionality")}:</div>
+      <Row gutter={6}>
+        <Col span={12}>
+          <div className="text-xs opacity-70 truncate">{startTableName}</div>
+          <Select
+            optionList={optionalityOptions}
+            value={optionalityValue(data.startOptional)}
+            className="w-full"
+            onChange={(value) => changeOptionality("startOptional", value)}
+          />
+        </Col>
+        <Col span={12}>
+          <div className="text-xs opacity-70 truncate">{endTableName}</div>
+          <Select
+            optionList={optionalityOptions}
+            value={optionalityValue(data.endOptional)}
+            className="w-full"
+            onChange={(value) => changeOptionality("endOptional", value)}
+          />
+        </Col>
+      </Row>
 
       <Row gutter={6} className="my-3">
         <Col span={12}>

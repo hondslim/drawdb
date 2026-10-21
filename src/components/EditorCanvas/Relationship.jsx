@@ -7,7 +7,13 @@ import {
   useRef,
   useState,
 } from "react";
-import { Cardinality, ObjectType, Tab } from "../../data/constants";
+import {
+  Cardinality,
+  ObjectType,
+  Tab,
+  darkBgTheme,
+} from "../../data/constants";
+import { fkOnEnd } from "../../utils/relationshipEnds";
 import { calcPath, calcCompositePath } from "../../utils/calcPath";
 import { useSettings, useLayout, useSelect } from "../../hooks";
 import { useTranslation } from "react-i18next";
@@ -173,6 +179,8 @@ const RelationshipPath = memo(function RelationshipPath({
     const labelHeight = labelBox?.height ?? 0;
 
     let labelPoint, startPoint, endPoint;
+    let startEdge = null;
+    let endEdge = null;
     if (composite) {
       labelPoint = composite.labelPoint;
       startPoint = composite.startCardinality;
@@ -183,6 +191,11 @@ const RelationshipPath = memo(function RelationshipPath({
       labelPoint = path.getPointAtLength(pathLength / 2);
       startPoint = path.getPointAtLength(cardinalityOffset);
       endPoint = path.getPointAtLength(pathLength - cardinalityOffset);
+      startEdge = edgeAt(path.getPointAtLength(0), path.getPointAtLength(4));
+      endEdge = edgeAt(
+        path.getPointAtLength(pathLength),
+        path.getPointAtLength(pathLength - 4),
+      );
     }
 
     setAnchors({
@@ -192,6 +205,8 @@ const RelationshipPath = memo(function RelationshipPath({
       },
       start: { x: startPoint.x, y: startPoint.y },
       end: { x: endPoint.x, y: endPoint.y },
+      startEdge,
+      endEdge,
     });
   }, [d, composite, data.name, settings.showRelationshipLabels]);
 
@@ -220,6 +235,18 @@ const RelationshipPath = memo(function RelationshipPath({
   }
 
   if (!d) return null;
+
+  const showCrowsFoot =
+    anchors?.startEdge &&
+    anchors?.endEdge &&
+    (typeof data.startOptional === "boolean" ||
+      typeof data.endOptional === "boolean");
+  const manyAtEnd = fkOnEnd(data.cardinality);
+  const isOneToOne =
+    data.cardinality === Cardinality.ONE_TO_ONE ||
+    data.cardinality === t(Cardinality.ONE_TO_ONE);
+  const markerColor = data.color ?? "grey";
+  const markerBackground = settings.mode === "dark" ? darkBgTheme : "white";
 
   return (
     <g
@@ -257,7 +284,25 @@ const RelationshipPath = memo(function RelationshipPath({
           {data.name}
         </text>
       )}
-      {anchors && settings.showCardinality && (
+      {showCrowsFoot && settings.showCardinality && (
+        <>
+          <CrowsFoot
+            {...anchors.startEdge}
+            many={!isOneToOne && !manyAtEnd}
+            optional={data.startOptional}
+            color={markerColor}
+            background={markerBackground}
+          />
+          <CrowsFoot
+            {...anchors.endEdge}
+            many={!isOneToOne && manyAtEnd}
+            optional={data.endOptional}
+            color={markerColor}
+            background={markerBackground}
+          />
+        </>
+      )}
+      {anchors && !showCrowsFoot && settings.showCardinality && (
         <>
           <CardinalityLabel
             x={anchors.start.x}
@@ -276,6 +321,35 @@ const RelationshipPath = memo(function RelationshipPath({
     </g>
   );
 });
+
+function edgeAt(point, inward) {
+  return {
+    x: point.x,
+    y: point.y,
+    angle: (Math.atan2(point.y - inward.y, point.x - inward.x) * 180) / Math.PI,
+  };
+}
+
+function CrowsFoot({ x, y, angle, many, optional, color, background }) {
+  return (
+    <g
+      transform={`translate(${x} ${y}) rotate(${angle})`}
+      stroke={color}
+      strokeWidth={2}
+      fill="none"
+      className="group-hover:stroke-sky-600"
+      pointerEvents="none"
+    >
+      {many ? (
+        <path d="M -14 0 L 0 -8 M -14 0 L 0 8" />
+      ) : (
+        <path d="M -8 -8 L -8 8" />
+      )}
+      {optional === true && <circle cx={-24} cy={0} r={5} fill={background} />}
+      {optional === false && <path d="M -19 -8 L -19 8" />}
+    </g>
+  );
+}
 
 function CardinalityLabel({ x, y, text, color, r = 12, padding = 14 }) {
   const [textWidth, setTextWidth] = useState(0);

@@ -4,6 +4,7 @@ import { dbToTypes } from "../../data/datatypes";
 import { Parser } from "node-sql-parser";
 import { buildSQLFromAST } from "./shared";
 import { findTable, normalizeSchema } from "../schema";
+import { deriveOptionality } from "../relationshipEnds";
 
 const affinity = {
   [DB.POSTGRES]: new Proxy(
@@ -483,6 +484,17 @@ export function fromPostgres(ast, diagramDb = DB.GENERIC) {
   } else {
     parseSingleStatement(ast);
   }
+
+  relationships.forEach((relationship) => {
+    Object.assign(
+      relationship,
+      deriveOptionality(
+        relationship,
+        tables.find((t) => t.id === relationship.startTableId),
+        tables.find((t) => t.id === relationship.endTableId),
+      ),
+    );
+  });
 
   return { tables, relationships, types, enums };
 }

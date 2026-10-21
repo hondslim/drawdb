@@ -10,6 +10,7 @@ import {
   isInlineEnumType,
   quoteIdentifier,
 } from "../dbml/types";
+import { deriveOptionality } from "../relationshipEnds";
 
 function parseDefaultDbml(field, database) {
   if (isFunction(field.default)) {
@@ -201,8 +202,11 @@ function refBlock(rel, tables) {
   const endTable = tables.find((table) => table.id === rel.endTableId);
   if (!startTable || !endTable) return null;
 
-  const symbol = cardinality(rel);
-  if (!symbol) return null;
+  const relation = cardinality(rel);
+  if (!relation) return null;
+  const derived = deriveOptionality(rel, startTable, endTable);
+  const marker = (key) => (rel[key] && !derived[key] ? "?" : "");
+  const symbol = `${marker("startOptional")}${relation}${marker("endOptional")}`;
 
   const pairs = getRelationshipFields(rel);
   const startFields = pairs.map(
