@@ -332,6 +332,7 @@ const en = {
     embed_settings: "Embed settings",
     default: "Default",
     hide: "Hide",
+    on: "On",
     force_hide: "Force hide",
     primary_key: "Primary key",
     foreign_key: "Foreign key",

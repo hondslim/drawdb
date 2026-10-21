@@ -159,6 +159,16 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
       setSearchParams(searchParams, { replace: true });
     }
 
+    const isNewDiagram =
+      isTemplate || (!loadedDiagramId && !isTemplate && !isDiagram);
+    if (
+      layout.viewer &&
+      (isNewDiagram || (cloudOnly && diagramSource !== "local"))
+    ) {
+      setSaveState(State.NONE);
+      return;
+    }
+
     if (cloudOnly && diagramSource !== "local") {
       const isNew =
         !loadedDiagramId || loadedDiagramId === "blank" || isTemplate;
@@ -185,7 +195,7 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
       return;
     }
 
-    if (isTemplate || (!loadedDiagramId && !isTemplate && !isDiagram)) {
+    if (isNewDiagram) {
       const diagramId = uuidv4();
       await db.diagrams
         .add({
@@ -263,6 +273,7 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
     isTemplate,
     loadedDiagramId,
     navigate,
+    layout.viewer,
   ]);
 
   const moveToCloud = useCallback(async () => {
@@ -532,7 +543,7 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
   ]);
 
   useEffect(() => {
-    if (layout.readOnly) return;
+    if (layout.readOnly && !layout.viewer) return;
 
     if (saveState !== State.SAVING) return;
 

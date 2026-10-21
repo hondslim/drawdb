@@ -383,7 +383,7 @@ export default function Canvas() {
       return;
     }
 
-    if (layout.readOnly) return;
+    if (layout.readOnly && !(layout.viewer && isDragging())) return;
 
     if (linking) {
       setLinkingLine({
@@ -686,6 +686,7 @@ export default function Canvas() {
   };
 
   const handleLinking = () => {
+    if (layout.readOnly) return;
     if (hoveredTable.tableId === null) return;
     if (hoveredTable.fieldId === null) return;
 

@@ -42,4 +42,13 @@ export const queryConfig = {
     isActive: (val) => val === "true" || val === "force",
     isForced: (val) => val === "force",
   },
+  readOnly: {
+    key: "readOnly",
+    label: "read_only",
+    options: [
+      { label: "default", value: null },
+      { label: "on", value: "true" },
+    ],
+    isActive: (val) => val === "true",
+  },
 };
