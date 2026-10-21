@@ -22,6 +22,7 @@ import {
   useCanvas,
   useSettings,
   useTransform,
+  useTableDeepLink,
   useDiagram,
   useUndoRedo,
   useSelect,
@@ -74,6 +75,7 @@ export default function Canvas() {
   const { settings } = useSettings();
   const { setUndoStack, setRedoStack } = useUndoRedo();
   const { transform, setTransform } = useTransform();
+  useTableDeepLink();
   const {
     selectedElement,
     setSelectedElement,

@@ -439,7 +439,7 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
         params.delete("shareId");
         const query = params.toString();
         routerNavigate(
-          `/editor/diagrams/${diagramId}${query ? `?${query}` : ""}`,
+          `/editor/diagrams/${diagramId}${query ? `?${query}` : ""}${window.location.hash}`,
           { replace: true },
         );
       } catch (e) {
