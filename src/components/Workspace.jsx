@@ -35,9 +35,15 @@ import { IconAlertTriangle } from "@douyinfe/semi-icons";
 import { useTranslation } from "react-i18next";
 import { databases } from "../data/databases";
 import { isRtl } from "../i18n/utils/rtl";
-import { useMatch, useParams, useSearchParams } from "react-router-dom";
+import {
+  useMatch,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { get, SHARE_FILENAME } from "../api/gists";
 import { mergeCustomTypes } from "../utils/customTypes";
+import { mergeShare } from "../utils/share";
 import {
   readDismissedBanners,
   addDismissedBanner,
@@ -48,6 +54,8 @@ export const IdContext = createContext({
   setGistId: () => {},
   version: "",
   setVersion: () => {},
+  loadedFromGistId: "",
+  reloadFromSource: () => {},
 });
 
 const SIDEPANEL_MIN_WIDTH = 374;
@@ -99,6 +107,7 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
   const isTemplate = useMatch("/editor/templates/:id");
 
   const navigate = useNavigateWithParams();
+  const routerNavigate = useNavigate();
   const extensionValues = useContext(ExtensionsContext);
   const extensions = useMemo(() => extensionValues ?? {}, [extensionValues]);
   const cloudOnly = typeof extensions.cloudSave === "function";
@@ -394,30 +403,34 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
       setSqlHeader(template.sqlHeader ?? "");
     };
 
-    const loadFromGist = async (shareId, diagramId = null) => {
+    const importShare = async (shareId) => {
       try {
         const { data } = await get(shareId);
-        const parsed = JSON.parse(data.files[SHARE_FILENAME].content);
-        setDiagramSource(null);
-        setUndoStack([]);
-        setRedoStack([]);
-        setGistId(shareId);
-        setLoadedFromGistId(shareId);
-        setDatabase(parsed.database);
-        setTitle(parsed.title);
-        setTables(parsed.tables);
-        setRelationships(parsed.relationships);
-        setNotes(parsed.notes);
-        setAreas(parsed.subjectAreas);
-        setTransform(parsed.transform);
-        setTypes(parsed.types ?? []);
-        setEnums(parsed.enums ?? []);
-        setViews(parsed.views ?? []);
-        setSqlHeader(parsed.sqlHeader ?? "");
-        if (parsed.customTypes) mergeCustomTypes(parsed.customTypes);
-        if (diagramId) {
-          navigate(`/editor/diagrams/${diagramId}`, { replace: true });
+        const shared = JSON.parse(data.files[SHARE_FILENAME].content);
+        if (shared.customTypes) mergeCustomTypes(shared.customTypes);
+
+        const matches = await db.diagrams
+          .where("loadedFromGistId")
+          .equals(shareId)
+          .sortBy("lastModified");
+        const stored = matches.at(-1) ?? null;
+        const record = mergeShare(shared, stored, shareId);
+
+        let diagramId = stored?.diagramId;
+        if (stored) {
+          await db.diagrams.put(record);
+        } else {
+          diagramId = uuidv4();
+          await db.diagrams.add({ ...record, diagramId });
         }
+
+        const params = new URLSearchParams(window.location.search);
+        params.delete("shareId");
+        const query = params.toString();
+        routerNavigate(
+          `/editor/diagrams/${diagramId}${query ? `?${query}` : ""}`,
+          { replace: true },
+        );
       } catch (e) {
         console.log(e);
         setSaveState(State.FAILED_TO_LOAD);
@@ -426,10 +439,7 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
 
     const shareId = searchParams.get("shareId");
     if (shareId) {
-      const existingDiagram = await db.diagrams.get({
-        loadedFromGistId: shareId,
-      });
-      await loadFromGist(shareId, existingDiagram?.diagramId || null);
+      await importShare(shareId);
       return;
     }
 
@@ -454,6 +464,7 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
     }
   }, [
     cloudLoad,
+    routerNavigate,
     setTransform,
     setRedoStack,
     setUndoStack,
@@ -476,6 +487,13 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
     loadedDiagramId,
     cloudOnly,
   ]);
+
+  const reloadFromSource = () => {
+    if (!loadedFromGistId) return;
+    const params = new URLSearchParams(searchParams);
+    params.set("shareId", loadedFromGistId);
+    setSearchParams(params, { replace: true });
+  };
 
   const returnToCurrentDiagram = async () => {
     await load();
@@ -529,7 +547,16 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
 
   return (
     <div className="h-full flex flex-col overflow-hidden theme">
-      <IdContext.Provider value={{ gistId, setGistId, version, setVersion }}>
+      <IdContext.Provider
+        value={{
+          gistId,
+          setGistId,
+          version,
+          setVersion,
+          loadedFromGistId,
+          reloadFromSource,
+        }}
+      >
         <ControlPanel
           title={title}
           setTitle={setTitle}

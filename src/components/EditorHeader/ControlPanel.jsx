@@ -174,7 +174,8 @@ export default function ControlPanel({
   const { selectedElement, setSelectedElement } = useSelect();
   const { transform, setTransform } = useTransform();
   const { t, i18n } = useTranslation();
-  const { version, gistId, setGistId } = useContext(IdContext);
+  const { version, gistId, setGistId, loadedFromGistId, reloadFromSource } =
+    useContext(IdContext);
   const isTemplate = useMatch("/editor/templates/:id");
   const navigate = useNavigateWithParams();
   const extensions = useExtensions();
@@ -1227,6 +1228,11 @@ export default function ControlPanel({
 
         function: () => {},
       },
+      ...(loadedFromGistId && {
+        reload_from_source: {
+          function: reloadFromSource,
+        },
+      }),
       save: {
         function: save,
         shortcut: "Ctrl+S",

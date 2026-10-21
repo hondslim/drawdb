@@ -144,6 +144,7 @@ const en = {
     unique_constraints: "Unique constraints",
     add_unique_constraint: "Add unique constraint",
     checks: "Checks",
+    reload_from_source: "Reload from source",
     external_table: "external",
     external_table_notice:
       "A table outside this diagram that a foreign key points to. It is not exported.",

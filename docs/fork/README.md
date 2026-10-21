@@ -11,3 +11,4 @@ Specs and plans for the issues on hondslim/drawdb. One file per issue.
 | #3 CHECK constraints                                   | [03-checks.md](03-checks.md)             |
 | #4 Optional vs mandatory relationship ends             | [04-optionality.md](04-optionality.md)   |
 | #5 Stub tables for FKs that point outside the diagram  | [05-stub-tables.md](05-stub-tables.md)   |
+| #6 Reuse the stored diagram for a shareId              | [06-share-reuse.md](06-share-reuse.md)   |
