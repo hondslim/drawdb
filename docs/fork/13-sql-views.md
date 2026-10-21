@@ -6,7 +6,7 @@
 - Each view becomes a read-only _SQL view table_ in the diagram: a table with `sqlView: {definition, dependsOn, materialized}` and one field per column. drawDB's query-builder views (`src/utils/views.js`) are a separate feature and are unchanged.
 - Because a SQL view table is a table, it can be moved, collapsed, hidden, found in search and deep-linked. Its position is kept across reloads (#6), matched by `(schema, name)`.
 - New view tables go to the right of the existing tables.
-- Canvas: the header shows an eye icon and a "view" (or "materialized view") tag. A dashed edge runs from the view to each table it depends on.
+- Canvas: the header shows an eye icon and a "view" (or "materialized view") tag. While the view is selected or hovered, or while focus mode is on (#18), a dashed edge runs from the view to each table it depends on. The source tables are always listed in its details.
 - Table details for a view show its columns, its source tables as links, and the definition in a read-only `pgsql` editor. Nothing is editable.
 - Like stubs (#5), SQL view tables raise no issues and are left out of SQL and DBML export. Editing the DBML in the editor keeps them.
 - On a shareId reload the share is the source of truth: a view that left the database disappears, and its columns and definition update.

@@ -1,6 +1,6 @@
 import { memo, useMemo } from "react";
 import { getTableHeight, getTableWidth } from "../../utils/utils";
-import { postgresTableKey } from "../../utils/postgresMeta";
+import { viewDependencyPairs } from "../../utils/sqlViews";
 
 function box(table, showComments, relationships) {
   const width = getTableWidth(table);
@@ -20,28 +20,22 @@ export default memo(function ViewDependencies({
   tables,
   relationships,
   showComments,
+  activeIds,
+  showAll,
 }) {
-  const edges = useMemo(() => {
-    const byKey = new Map(
-      tables
-        .filter((t) => !t.hidden)
-        .map((table) => [postgresTableKey(table), table]),
-    );
-    return tables
-      .filter((table) => table.sqlView && !table.hidden)
-      .flatMap((view) =>
-        view.sqlView.dependsOn
-          .map((key) => byKey.get(key.includes(".") ? key : `public.${key}`))
-          .filter((target) => target && target.id !== view.id)
-          .map((target) => ({
-            id: `${view.id}->${target.id}`,
-            d: edgePath(
-              box(view, showComments, relationships),
-              box(target, showComments, relationships),
-            ),
-          })),
-      );
-  }, [tables, relationships, showComments]);
+  const edges = useMemo(
+    () =>
+      viewDependencyPairs(tables, { activeIds, showAll }).map(
+        ([view, target]) => ({
+          id: `${view.id}->${target.id}`,
+          d: edgePath(
+            box(view, showComments, relationships),
+            box(target, showComments, relationships),
+          ),
+        }),
+      ),
+    [tables, relationships, showComments, activeIds, showAll],
+  );
 
   return edges.map((edge) => (
     <path

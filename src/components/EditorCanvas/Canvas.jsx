@@ -242,6 +242,12 @@ export default function Canvas() {
     return ids;
   }, [bulkSelectedElements, selectedElement.element, selectedElement.id]);
 
+  const activeViewIds = useMemo(() => {
+    const ids = new Set(selectedTableIds);
+    if (hoveredTable.tableId !== null) ids.add(hoveredTable.tableId);
+    return ids;
+  }, [selectedTableIds, hoveredTable.tableId]);
+
   const isSameElement = (el1, el2) => {
     return el1.id === el2.id && el1.type === el2.type;
   };
@@ -925,6 +931,8 @@ export default function Canvas() {
             tables={shownTables}
             relationships={relationships}
             showComments={settings.showComments}
+            activeIds={activeViewIds}
+            showAll={!!focused}
           />
           {diff && !focused && <DiffGhosts diff={diff} tables={shownTables} />}
           {shownRelationships.map((e) => (
