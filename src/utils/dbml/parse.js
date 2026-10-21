@@ -18,6 +18,24 @@ const CARDINALITY_BY_RELATION = {
   "1:1": Cardinality.ONE_TO_ONE,
 };
 
+const OPTIONAL_PREFIX = "0..";
+
+function splitRelation(relation) {
+  const value = String(relation ?? "");
+  const optional = value.startsWith(OPTIONAL_PREFIX);
+  return {
+    multiplicity: optional ? value.slice(OPTIONAL_PREFIX.length) : value,
+    optional,
+  };
+}
+
+function parseChecks(checks) {
+  return (checks ?? []).map((check) => ({
+    name: check.name ?? "",
+    expression: String(check.expression ?? ""),
+  }));
+}
+
 function baseTypeName(type) {
   const name = String(type?.type_name ?? "");
   if (type?.args == null) return name;
@@ -42,6 +60,7 @@ function parseField(column, primaryKeyColumns) {
     notNull: !!column.not_null,
     increment: !!column.increment,
     comment: column.note ?? "",
+    checks: parseChecks(column.checks),
   };
 }
 
@@ -56,6 +75,7 @@ function parseTable(table) {
     comment: table.note ?? "",
     color: table.headerColor ?? null,
     fields: table.fields.map((field) => parseField(field, primaryKeyColumns)),
+    checks: parseChecks(table.checks),
     indices: table.indexes
       .filter((index) => !index.pk)
       .map((index) => ({
@@ -68,8 +88,12 @@ function parseTable(table) {
 
 function parseRef(ref) {
   const [start, end] = ref.endpoints;
+  const startRelation = splitRelation(start.relation);
+  const endRelation = splitRelation(end.relation);
   const cardinality =
-    CARDINALITY_BY_RELATION[`${start.relation}:${end.relation}`];
+    CARDINALITY_BY_RELATION[
+      `${startRelation.multiplicity}:${endRelation.multiplicity}`
+    ];
   if (!cardinality) return null;
 
   return {
@@ -81,6 +105,8 @@ function parseRef(ref) {
     endTableName: end.tableName,
     endFieldNames: [...end.fieldNames],
     cardinality,
+    startOptional: startRelation.optional,
+    endOptional: endRelation.optional,
     deleteConstraint: constraintFor(ref.onDelete),
     updateConstraint: constraintFor(ref.onUpdate),
   };

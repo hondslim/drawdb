@@ -11,6 +11,9 @@ export function setUpDBML(monaco, database) {
     keywords: [
       "table",
       "tablegroup",
+      "tablepartial",
+      "checks",
+      "check",
       "project",
       "enum",
       "ref",
