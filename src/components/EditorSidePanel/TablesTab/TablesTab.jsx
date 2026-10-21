@@ -1,4 +1,5 @@
-import { Collapse, Button } from "@douyinfe/semi-ui";
+import { useMemo, useState } from "react";
+import { Collapse, Button, Select } from "@douyinfe/semi-ui";
 import { IconEyeOpened, IconEyeClosed } from "@douyinfe/semi-icons";
 import { IconPlus } from "@douyinfe/semi-icons";
 import {
@@ -16,6 +17,9 @@ import { SortableList } from "../../SortableList/SortableList";
 import SearchBar from "./SearchBar";
 import Empty from "../Empty";
 import TableInfo from "./TableInfo";
+import { DEFAULT_SCHEMA, diagramSchemas } from "../../../utils/schema";
+
+const ALL_SCHEMAS = "\u0000all";
 
 export default function TablesTab() {
   const { tables, addTable, setTables } = useDiagram();
@@ -23,11 +27,35 @@ export default function TablesTab() {
   const { t } = useTranslation();
   const { layout } = useLayout();
   const { setSaveState } = useSaveState();
+  const [schemaFilter, setSchemaFilter] = useState(ALL_SCHEMAS);
+
+  const schemas = useMemo(() => diagramSchemas(tables), [tables]);
+  const activeFilter =
+    schemas.length > 1 && schemas.includes(schemaFilter)
+      ? schemaFilter
+      : ALL_SCHEMAS;
+  const visibleTables =
+    activeFilter === ALL_SCHEMAS
+      ? tables
+      : tables.filter((table) => (table.schema ?? "") === activeFilter);
+
+  const reorderVisible = (reordered) => {
+    if (activeFilter === ALL_SCHEMAS) {
+      setTables(reordered);
+      return;
+    }
+    const queue = [...reordered];
+    setTables(
+      tables.map((table) =>
+        (table.schema ?? "") === activeFilter ? queue.shift() : table,
+      ),
+    );
+  };
 
   return (
     <>
       <div className="flex gap-2">
-        <SearchBar tables={tables} />
+        <SearchBar tables={visibleTables} />
         <div>
           <Button
             block
@@ -39,6 +67,21 @@ export default function TablesTab() {
           </Button>
         </div>
       </div>
+      {schemas.length > 1 && (
+        <Select
+          className="w-full mt-2"
+          value={activeFilter}
+          onChange={setSchemaFilter}
+          optionList={[
+            { value: ALL_SCHEMAS, label: t("all_schemas") },
+            ...schemas.map((schema) => ({
+              value: schema,
+              label: schema || DEFAULT_SCHEMA,
+            })),
+          ]}
+          prefix={<span className="px-2 opacity-60">{t("schema")}</span>}
+        />
+      )}
       {tables.length === 0 ? (
         <Empty title={t("no_tables")} text={t("no_tables_text")} />
       ) : (
@@ -62,10 +105,12 @@ export default function TablesTab() {
         >
           <SortableList
             keyPrefix="tables-tab"
-            items={tables}
-            onChange={(newTables) => setTables(newTables)}
+            items={visibleTables}
+            onChange={reorderVisible}
             afterChange={() => setSaveState(State.SAVING)}
-            renderItem={(item) => <TableListItem table={item} />}
+            renderItem={(item) => (
+              <TableListItem table={item} showSchema={schemas.length > 1} />
+            )}
           />
         </Collapse>
       )}
@@ -73,7 +118,7 @@ export default function TablesTab() {
   );
 }
 
-function TableListItem({ table }) {
+function TableListItem({ table, showSchema }) {
   const { layout } = useLayout();
   const { updateTable } = useDiagram();
   const { setUndoStack, setRedoStack } = useUndoRedo();
@@ -110,6 +155,11 @@ function TableListItem({ table }) {
             <div className="flex items-center gap-2 flex-1 min-w-0">
               <DragHandle readOnly={layout.readOnly} id={table.id} />
               <div className="overflow-hidden text-ellipsis whitespace-nowrap shrink-0 max-w-[60%]">
+                {showSchema && table.schema && (
+                  <span className="font-normal opacity-60">
+                    {table.schema}.
+                  </span>
+                )}
                 {table.name}
               </div>
               {settings.showComments && table.comment && (

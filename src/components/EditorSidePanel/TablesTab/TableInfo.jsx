@@ -23,6 +23,7 @@ import UniqueConstraintDetails from "./UniqueConstraintDetails";
 import { useTranslation } from "react-i18next";
 import { SortableList } from "../../SortableList/SortableList";
 import { nanoid } from "nanoid";
+import { DEFAULT_SCHEMA } from "../../../utils/schema";
 
 export default function TableInfo({ data }) {
   const { tables, database } = useDiagram();
@@ -181,6 +182,39 @@ export default function TableInfo({ data }) {
         />
       </div>
 
+      {(database === DB.POSTGRES || data.schema) && (
+        <div className="flex items-center mb-2.5">
+          <div className="text-md font-semibold break-keep">{t("schema")}:</div>
+          <Input
+            value={data.schema ?? ""}
+            placeholder={DEFAULT_SCHEMA}
+            className="ms-2"
+            readonly={layout.readOnly}
+            onChange={(value) => updateTable(data.id, { schema: value })}
+            onFocus={(e) => setEditField({ schema: e.target.value })}
+            onBlur={(e) => {
+              if (e.target.value === editField.schema) return;
+              setUndoStack((prev) => [
+                ...prev,
+                {
+                  action: Action.EDIT,
+                  element: ObjectType.TABLE,
+                  component: "self",
+                  tid: data.id,
+                  undo: editField,
+                  redo: { schema: e.target.value },
+                  message: t("edit_table", {
+                    tableName: data.name,
+                    extra: "[schema]",
+                  }),
+                },
+              ]);
+              setRedoStack([]);
+            }}
+          />
+        </div>
+      )}
+
       <SortableList
         items={data.fields}
         keyPrefix={`table-${data.id}`}
@@ -318,34 +352,34 @@ export default function TableInfo({ data }) {
             <Collapse.Panel header={t("comment")} itemKey="1">
               <TextArea
                 field="comment"
-              value={data.comment}
-              readonly={layout.readOnly}
-              autosize
-              placeholder={t("comment")}
-              rows={1}
-              onChange={(value) =>
-                updateTable(data.id, { comment: value }, false)
-              }
-              onFocus={(e) => setEditField({ comment: e.target.value })}
-              onBlur={(e) => {
-                if (e.target.value === editField.comment) return;
-                setUndoStack((prev) => [
-                  ...prev,
-                  {
-                    action: Action.EDIT,
-                    element: ObjectType.TABLE,
-                    component: "self",
-                    tid: data.id,
-                    undo: editField,
-                    redo: { comment: e.target.value },
-                    message: t("edit_table", {
-                      tableName: e.target.value,
-                      extra: "[comment]",
-                    }),
-                  },
-                ]);
-                setRedoStack([]);
-              }}
+                value={data.comment}
+                readonly={layout.readOnly}
+                autosize
+                placeholder={t("comment")}
+                rows={1}
+                onChange={(value) =>
+                  updateTable(data.id, { comment: value }, false)
+                }
+                onFocus={(e) => setEditField({ comment: e.target.value })}
+                onBlur={(e) => {
+                  if (e.target.value === editField.comment) return;
+                  setUndoStack((prev) => [
+                    ...prev,
+                    {
+                      action: Action.EDIT,
+                      element: ObjectType.TABLE,
+                      component: "self",
+                      tid: data.id,
+                      undo: editField,
+                      redo: { comment: e.target.value },
+                      message: t("edit_table", {
+                        tableName: e.target.value,
+                        extra: "[comment]",
+                      }),
+                    },
+                  ]);
+                  setRedoStack([]);
+                }}
               />
             </Collapse.Panel>
           </Collapse>

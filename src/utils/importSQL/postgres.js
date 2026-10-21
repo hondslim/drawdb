@@ -1,7 +1,8 @@
 import { nanoid } from "nanoid";
 import { Cardinality, Constraint, DB } from "../../data/constants";
 import { dbToTypes } from "../../data/datatypes";
-import { buildSQLFromAST, findReferencedTable } from "./shared";
+import { buildSQLFromAST } from "./shared";
+import { findTable, normalizeSchema } from "../schema";
 
 const affinity = {
   [DB.POSTGRES]: new Proxy(
@@ -19,6 +20,20 @@ const affinity = {
   ),
 };
 
+function resolveTable(tables, ref, currentTable) {
+  const schema = normalizeSchema(ref?.db ?? ref?.schema);
+  const name = ref?.table;
+  const isCurrent =
+    currentTable &&
+    currentTable.name === name &&
+    (currentTable.schema ?? "") === schema;
+  if (isCurrent) return currentTable;
+
+  const exact = findTable(tables, schema, name);
+  if (exact || schema) return exact;
+  return tables.find((t) => t.name === name);
+}
+
 export function fromPostgres(ast, diagramDb = DB.GENERIC) {
   const tables = [];
   const relationships = [];
@@ -30,6 +45,7 @@ export function fromPostgres(ast, diagramDb = DB.GENERIC) {
       if (e.keyword === "table") {
         const table = {};
         table.name = e.table[0].table;
+        table.schema = normalizeSchema(e.table[0].db);
         table.comment = "";
         table.color = "#175e7a";
         table.fields = [];
@@ -139,7 +155,11 @@ export function fromPostgres(ast, diagramDb = DB.GENERIC) {
               );
               const startFieldName = startFieldNames[0];
 
-              const endTable = findReferencedTable(tables, table, endTableName);
+              const endTable = resolveTable(
+                tables,
+                d.reference_definition.table[0],
+                table,
+              );
               if (!endTable) return;
 
               const fieldPairs = [];
@@ -232,7 +252,11 @@ export function fromPostgres(ast, diagramDb = DB.GENERIC) {
               }
             });
 
-            const endTable = findReferencedTable(tables, table, endTableName);
+            const endTable = resolveTable(
+              tables,
+              d.reference_definition.table[0],
+              table,
+            );
             if (!endTable) return;
 
             const endField = endTable.fields.find(
@@ -271,7 +295,7 @@ export function fromPostgres(ast, diagramDb = DB.GENERIC) {
           fields: e.index_columns.map((f) => f.column.expr.value),
         };
 
-        const table = tables.find((t) => t.name === e.table.table);
+        const table = resolveTable(tables, e.table);
 
         if (table) {
           table.indices.push(index);
@@ -284,7 +308,7 @@ export function fromPostgres(ast, diagramDb = DB.GENERIC) {
           const newEnum = {
             name: e.name.name,
             values: e.create_definitions.value.map((x) => x.value),
-            id : nanoid()
+            id: nanoid(),
           };
           enums.push(newEnum);
         } else if (Array.isArray(e.create_definitions)) {
@@ -354,10 +378,14 @@ export function fromPostgres(ast, diagramDb = DB.GENERIC) {
               },
             );
 
-            const startTable = tables.find((t) => t.name === startTableName);
+            const startTable = resolveTable(tables, e.table[0]);
             if (!startTable) return;
 
-            const endTable = tables.find((t) => t.name === endTableName);
+            const endTable = resolveTable(
+              tables,
+              expr.create_definitions.reference_definition.table[0],
+              startTable,
+            );
             if (!endTable) return;
 
             const fieldPairs = [];
@@ -400,12 +428,12 @@ export function fromPostgres(ast, diagramDb = DB.GENERIC) {
       }
     } else if (e.type === "comment") {
       if (e.target.type === "table") {
-        const table = tables.find((t) => t.name === e.target?.name?.table);
+        const table = resolveTable(tables, e.target?.name);
         if (table) {
           table.comment = e.expr.expr.value;
         }
       } else if (e.target.type === "column") {
-        const table = tables.find((t) => t.name === e.target?.name?.table);
+        const table = resolveTable(tables, e.target?.name);
         if (table) {
           const field = table.fields.find(
             (f) => f.name === e.target?.name?.column?.expr?.value,

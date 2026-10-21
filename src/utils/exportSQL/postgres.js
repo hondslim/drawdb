@@ -7,8 +7,18 @@ import {
   getFkColumnNames,
 } from "./shared";
 import { dbToTypes } from "../../data/datatypes";
+import { diagramSchemas } from "../schema";
+
+function tableRef(table) {
+  return table.schema ? `"${table.schema}"."${table.name}"` : `"${table.name}"`;
+}
 
 function tablesToPostgres(diagram) {
+  const schemaStatements = diagramSchemas(diagram.tables)
+    .filter(Boolean)
+    .map((schema) => `CREATE SCHEMA IF NOT EXISTS "${schema}";`)
+    .join("\n");
+
   const enumStatements = diagram.enums
     .map(
       (e) =>
@@ -70,11 +80,11 @@ function tablesToPostgres(diagram) {
 
       const commentStatements = [
         table.comment?.trim()
-          ? `COMMENT ON TABLE "${table.name}" IS '${escapeQuotes(table.comment)}';`
+          ? `COMMENT ON TABLE ${tableRef(table)} IS '${escapeQuotes(table.comment)}';`
           : "",
         ...table.fields.map((field) =>
           field.comment?.trim()
-            ? `COMMENT ON COLUMN "${table.name}"."${field.name}" IS '${escapeQuotes(field.comment)}';`
+            ? `COMMENT ON COLUMN ${tableRef(table)}."${field.name}" IS '${escapeQuotes(field.comment)}';`
             : "",
         ),
       ]
@@ -84,14 +94,14 @@ function tablesToPostgres(diagram) {
       const indexStatements = table.indices
         .map(
           (i) =>
-            `CREATE ${i.unique ? "UNIQUE " : ""}INDEX "${i.name}"\nON "${table.name}" (${i.fields
+            `CREATE ${i.unique ? "UNIQUE " : ""}INDEX "${i.name}"\nON ${tableRef(table)} (${i.fields
               .map((f) => `"${f}"`)
               .join(", ")});`,
         )
         .join("\n");
 
       return [
-        `CREATE TABLE IF NOT EXISTS "${table.name}" (\n${fieldDefinitions}${primaryKeyClause}${uniqueClause}${inheritsClause};`,
+        `CREATE TABLE IF NOT EXISTS ${tableRef(table)} (\n${fieldDefinitions}${primaryKeyClause}${uniqueClause}${inheritsClause};`,
         commentStatements,
         indexStatements,
       ]
@@ -112,19 +122,21 @@ function tablesToPostgres(diagram) {
         startTable,
         endTable,
       );
-      if (startColumns.some((c) => !c) || endColumns.some((c) => !c))
-        return "";
+      if (startColumns.some((c) => !c) || endColumns.some((c) => !c)) return "";
 
-      return `ALTER TABLE "${startTable.name}"\nADD FOREIGN KEY(${startColumns
+      return `ALTER TABLE ${tableRef(startTable)}\nADD FOREIGN KEY(${startColumns
         .map((c) => `"${c}"`)
-        .join(", ")}) REFERENCES "${endTable.name}"(${endColumns
+        .join(", ")}) REFERENCES ${tableRef(endTable)}(${endColumns
         .map((c) => `"${c}"`)
-        .join(", ")})\nON UPDATE ${r.updateConstraint.toUpperCase()} ON DELETE ${r.deleteConstraint.toUpperCase()};`;
+        .join(
+          ", ",
+        )})\nON UPDATE ${r.updateConstraint.toUpperCase()} ON DELETE ${r.deleteConstraint.toUpperCase()};`;
     })
     .filter(Boolean)
     .join("\n");
 
   return [
+    schemaStatements,
     enumStatements,
     typeStatements,
     tableStatements,

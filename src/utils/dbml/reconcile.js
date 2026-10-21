@@ -3,6 +3,7 @@ import { defaultBlue } from "../../data/constants";
 import { arrangeTables } from "../arrangeTables";
 import { getTableWidth, isKeyword } from "../utils";
 import { isInlineEnumType, typeTakesSize } from "./types";
+import { findTable, tableKey } from "../schema";
 
 const NEW_TABLE_GAP_X = 80;
 const NEW_TABLE_GAP_Y = 240;
@@ -12,7 +13,12 @@ function sameList(a, b) {
   return a.length === b.length && a.every((item, i) => item === b[i]);
 }
 
-function matchByName(parsedItems, baseItems, canRename) {
+function matchByName(
+  parsedItems,
+  baseItems,
+  canRename,
+  nameOf = (item) => item.name,
+) {
   const matched = new Map();
   const usedBase = new Set();
 
@@ -25,15 +31,15 @@ function matchByName(parsedItems, baseItems, canRename) {
     baseItems.findIndex((item, i) => !usedBase.has(i) && predicate(item));
 
   parsedItems.forEach((parsed, i) => {
-    const exact = findFreeBase((item) => item.name === parsed.name);
+    const exact = findFreeBase((item) => nameOf(item) === nameOf(parsed));
     if (exact !== -1) claim(i, exact);
   });
 
   parsedItems.forEach((parsed, i) => {
     if (matched.has(i)) return;
-    const name = String(parsed.name).toLowerCase();
+    const name = String(nameOf(parsed)).toLowerCase();
     const insensitive = findFreeBase(
-      (item) => String(item.name).toLowerCase() === name,
+      (item) => String(nameOf(item)).toLowerCase() === name,
     );
     if (insensitive !== -1) claim(i, insensitive);
   });
@@ -179,6 +185,7 @@ function mergeTable(parsed, base, database) {
   return {
     ...base,
     name: parsed.name,
+    schema: parsed.schema || (base.schema ? "" : base.schema),
     comment: parsed.comment,
     color: parsed.color ?? base.color,
     fields: reconcileFields(parsed.fields, base.fields ?? [], database),
@@ -190,6 +197,7 @@ function createTable(parsed) {
   return {
     id: nanoid(),
     name: parsed.name,
+    schema: parsed.schema ?? "",
     comment: parsed.comment,
     color: parsed.color ?? defaultBlue,
     fields: parsed.fields.map(createField),
@@ -257,10 +265,12 @@ function endpointSignature(rel) {
 }
 
 function resolveEndpoints(parsed, tables) {
-  const startTable = tables.find(
-    (table) => table.name === parsed.startTableName,
+  const startTable = findTable(
+    tables,
+    parsed.startSchemaName,
+    parsed.startTableName,
   );
-  const endTable = tables.find((table) => table.name === parsed.endTableName);
+  const endTable = findTable(tables, parsed.endSchemaName, parsed.endTableName);
   if (!startTable || !endTable) return null;
 
   const fields = [];
@@ -349,7 +359,12 @@ function sameRelationshipFields(a, b) {
 
 export function reconcileDbml(parsed, base, database) {
   const baseTables = base?.tables ?? [];
-  const matched = matchByName(parsed.tables, baseTables, sharesFieldName);
+  const matched = matchByName(
+    parsed.tables,
+    baseTables,
+    sharesFieldName,
+    tableKey,
+  );
 
   const tables = parsed.tables.map((parsedTable, i) => {
     const baseTable = matched.get(i);

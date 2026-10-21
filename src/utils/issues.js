@@ -1,6 +1,7 @@
 import { dbToTypes } from "../data/datatypes";
 import i18n from "../i18n/i18n";
 import { isFunction } from "./utils";
+import { qualifiedName, tableKey } from "./schema";
 
 function checkDefault(field, database) {
   if (field.default === "") return true;
@@ -25,10 +26,12 @@ export function getIssues(diagram) {
       issues.push(i18n.t("table_w_no_name"));
     }
 
-    if (duplicateTableNames[table.name]) {
-      issues.push(i18n.t("duplicate_table_by_name", { tableName: table.name }));
+    if (duplicateTableNames[tableKey(table)]) {
+      issues.push(
+        i18n.t("duplicate_table_by_name", { tableName: qualifiedName(table) }),
+      );
     } else {
-      duplicateTableNames[table.name] = true;
+      duplicateTableNames[tableKey(table)] = true;
     }
 
     const duplicateFieldNames = {};

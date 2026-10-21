@@ -1,6 +1,7 @@
 import { Parser } from "@dbml/core";
 import { Cardinality, Constraint } from "../../data/constants";
 import { inlineEnumTypeName } from "./types";
+import { normalizeSchema } from "../schema";
 
 const parser = new Parser();
 
@@ -72,6 +73,7 @@ function parseTable(table) {
 
   return {
     name: table.name,
+    schema: normalizeSchema(table.schema?.name),
     comment: table.note ?? "",
     color: table.headerColor ?? null,
     fields: table.fields.map((field) => parseField(field, primaryKeyColumns)),
@@ -100,8 +102,10 @@ function parseRef(ref) {
     name:
       ref.name ||
       `fk_${start.tableName}_${start.fieldNames[0]}_${end.tableName}`,
+    startSchemaName: normalizeSchema(start.schemaName),
     startTableName: start.tableName,
     startFieldNames: [...start.fieldNames],
+    endSchemaName: normalizeSchema(end.schemaName),
     endTableName: end.tableName,
     endFieldNames: [...end.fieldNames],
     cardinality,

@@ -1,4 +1,11 @@
-const TABLE_KEYS = ["name", "comment", "color", "indices", "uniqueConstraints"];
+const TABLE_KEYS = [
+  "name",
+  "schema",
+  "comment",
+  "color",
+  "indices",
+  "uniqueConstraints",
+];
 
 const FIELD_KEYS = [
   "name",

@@ -116,6 +116,8 @@ const en = {
     strict_mode_is_on_no_issues:
       "Strict mode is off so no problems will be displayed.",
     name: "Name",
+    schema: "Schema",
+    all_schemas: "All schemas",
     type: "Type",
     null: "Null",
     not_null: "Not null",

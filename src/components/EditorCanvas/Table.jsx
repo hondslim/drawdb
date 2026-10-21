@@ -54,6 +54,7 @@ import ResizeHandles from "./ResizeHandles";
 
 export default memo(function Table({
   tableData,
+  showSchema,
   isSelected,
   zoom,
   database,
@@ -284,7 +285,19 @@ export default memo(function Table({
             <div
               className={`overflow-hidden font-bold h-[40px] flex justify-between items-center gap-2`}
             >
-              <div className="px-3 overflow-hidden text-ellipsis whitespace-nowrap min-w-0 flex-1">
+              <div
+                className="px-3 overflow-hidden text-ellipsis whitespace-nowrap min-w-0 flex-1"
+                title={
+                  showSchema && tableData.schema
+                    ? `${tableData.schema}.${tableData.name}`
+                    : undefined
+                }
+              >
+                {showSchema && tableData.schema && (
+                  <span className="font-normal opacity-60">
+                    {tableData.schema}.
+                  </span>
+                )}
                 {tableData.name}
               </div>
               <div className="hidden group-hover:flex items-center shrink-0 pe-2">

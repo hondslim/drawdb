@@ -13,6 +13,7 @@ import {
 } from "../../data/constants";
 import { Toast } from "@douyinfe/semi-ui";
 import Table from "./Table";
+import { hasMultipleSchemas } from "../../utils/schema";
 import View from "./View";
 import Area from "./Area";
 import Relationship from "./Relationship";
@@ -153,6 +154,7 @@ export default function Canvas() {
     [tables],
   );
 
+  const showSchemas = useMemo(() => hasMultipleSchemas(tables), [tables]);
   const selectedTableIds = useMemo(() => {
     const ids = new Set(
       bulkSelectedElements
@@ -855,6 +857,7 @@ export default function Canvas() {
             <Table
               key={table.id}
               tableData={table}
+              showSchema={showSchemas}
               isSelected={selectedTableIds.has(table.id)}
               zoom={transform.zoom}
               database={database}

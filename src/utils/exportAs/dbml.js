@@ -140,6 +140,11 @@ function indexesBlock(table) {
   return `\n\n\tindexes {\n${entries.join("\n")}\n\t}`;
 }
 
+function tableName(table) {
+  const name = quoteIdentifier(table.name);
+  return table.schema ? `${quoteIdentifier(table.schema)}.${name}` : name;
+}
+
 function tableBlock(table, database, enumNames) {
   const headerColor = table.color ? ` [headercolor: ${table.color}]` : "";
   const fields = table.fields
@@ -155,13 +160,13 @@ function tableBlock(table, database, enumNames) {
       ? `\n\n\tNote: ${processComment(table.comment)}`
       : "";
 
-  return `Table ${quoteIdentifier(table.name)}${headerColor} {\n${fields}${indexesBlock(table)}${comment}\n}`;
+  return `Table ${tableName(table)}${headerColor} {\n${fields}${indexesBlock(table)}${comment}\n}`;
 }
 
-function columnRef(tableName, fieldNames) {
+function columnRef(table, fieldNames) {
   const columns = fieldNames.map((name) => quoteIdentifier(name));
   const target = columns.length === 1 ? columns[0] : `(${columns.join(", ")})`;
-  return `${quoteIdentifier(tableName)}.${target}`;
+  return `${tableName(table)}.${target}`;
 }
 
 function constraintKeyword(constraint) {
@@ -190,7 +195,7 @@ function refBlock(rel, tables) {
   const name = rel.name ? `${quoteIdentifier(rel.name)} ` : "";
   const settings = `[ delete: ${constraintKeyword(rel.deleteConstraint)}, update: ${constraintKeyword(rel.updateConstraint)} ]`;
 
-  return `Ref ${name}{\n\t${columnRef(startTable.name, startFields)} ${symbol} ${columnRef(endTable.name, endFields)} ${settings}\n}`;
+  return `Ref ${name}{\n\t${columnRef(startTable, startFields)} ${symbol} ${columnRef(endTable, endFields)} ${settings}\n}`;
 }
 
 export function toDBML(diagram) {
