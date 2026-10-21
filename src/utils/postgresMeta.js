@@ -83,3 +83,44 @@ export function metadataForTable(meta, table) {
     ),
   };
 }
+
+export function rlsState(meta, table) {
+  if (!meta || table.stub) return null;
+  const state = meta.rls?.[postgresTableKey(table)];
+  if (!state?.enabled) return "off";
+  return state.forced ? "forced" : "enabled";
+}
+
+const NO_METADATA = Object.freeze({
+  rlsState: "off",
+  ...Object.fromEntries(TABLE_LISTS.map((name) => [name, []])),
+});
+
+export function indexPostgresMeta(meta) {
+  if (!meta) return null;
+
+  const byKey = new Map();
+  const entry = (key) => {
+    if (!byKey.has(key)) {
+      byKey.set(key, {
+        rlsState: "off",
+        ...Object.fromEntries(TABLE_LISTS.map((name) => [name, []])),
+      });
+    }
+    return byKey.get(key);
+  };
+
+  Object.entries(meta.rls ?? {}).forEach(([key, state]) => {
+    entry(key).rlsState = !state.enabled
+      ? "off"
+      : state.forced
+        ? "forced"
+        : "enabled";
+  });
+  TABLE_LISTS.forEach((name) =>
+    list(meta[name]).forEach((item) => entry(item.table)[name].push(item)),
+  );
+
+  return (table) =>
+    table.stub ? null : byKey.get(postgresTableKey(table)) ?? NO_METADATA;
+}

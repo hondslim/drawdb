@@ -17,6 +17,7 @@ import FocusBar from "./FocusBar";
 import { focusView } from "../../utils/focus";
 import { transformForTable } from "../../utils/deepLink";
 import { hasMultipleSchemas } from "../../utils/schema";
+import { indexPostgresMeta } from "../../utils/postgresMeta";
 import View from "./View";
 import Area from "./Area";
 import Relationship from "./Relationship";
@@ -49,7 +50,7 @@ import {
   resolveViewColumns,
 } from "../../utils/views";
 import { getRectFromEndpoints, isInsideRect } from "../../utils/rect";
-import { State, noteWidth } from "../../data/constants";
+import { DB, State, noteWidth } from "../../data/constants";
 import { nanoid } from "nanoid";
 
 const notDragging = {
@@ -68,8 +69,14 @@ export default function Canvas() {
     pointer,
   } = canvasContextValue;
 
-  const { tables, updateTable, relationships, addRelationship, database } =
-    useDiagram();
+  const {
+    tables,
+    updateTable,
+    relationships,
+    addRelationship,
+    database,
+    postgres,
+  } = useDiagram();
   const { setSaveState } = useSaveState();
   const { areas, updateArea } = useAreas();
   const { views, updateView } = useViews();
@@ -183,6 +190,10 @@ export default function Canvas() {
   );
 
   const showSchemas = useMemo(() => hasMultipleSchemas(tables), [tables]);
+  const pgMetaFor = useMemo(
+    () => (database === DB.POSTGRES ? indexPostgresMeta(postgres) : null),
+    [database, postgres],
+  );
   const selectedTableIds = useMemo(() => {
     const ids = new Set(
       bulkSelectedElements
@@ -888,6 +899,7 @@ export default function Canvas() {
               key={table.id}
               tableData={table}
               showSchema={showSchemas}
+              pgMeta={pgMetaFor?.(table)}
               isSelected={selectedTableIds.has(table.id)}
               zoom={transform.zoom}
               database={database}

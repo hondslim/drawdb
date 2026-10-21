@@ -21,6 +21,7 @@ import TableField from "./TableField";
 import IndexDetails from "./IndexDetails";
 import UniqueConstraintDetails from "./UniqueConstraintDetails";
 import CheckDetails from "./CheckDetails";
+import PostgresDetails from "./PostgresDetails";
 import { useTranslation } from "react-i18next";
 import { SortableList } from "../../SortableList/SortableList";
 import { nanoid } from "nanoid";
@@ -409,6 +410,8 @@ export default function TableInfo({ data }) {
           </Collapse>
         </Card>
       )}
+
+      <PostgresDetails table={data} />
 
       {((data.comment && data.comment.trim() !== "") || showComment) && (
         <Card

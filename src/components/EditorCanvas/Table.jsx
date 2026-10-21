@@ -51,10 +51,12 @@ import {
   getRelationshipFields,
 } from "../../utils/utils";
 import ResizeHandles from "./ResizeHandles";
+import PostgresBadges from "./PostgresBadges";
 
 export default memo(function Table({
   tableData,
   showSchema,
+  pgMeta,
   isSelected,
   zoom,
   database,
@@ -302,6 +304,7 @@ export default memo(function Table({
                 )}
                 {tableData.name}
               </div>
+              <PostgresBadges meta={pgMeta} />
               {tableData.stub && (
                 <Tag
                   size="small"

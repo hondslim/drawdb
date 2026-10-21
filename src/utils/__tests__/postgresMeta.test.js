@@ -3,6 +3,8 @@ import {
   metadataForTable,
   normalizePostgresMeta,
   postgresTableKey,
+  rlsState,
+  indexPostgresMeta,
 } from "../postgresMeta";
 
 const raw = {
@@ -96,5 +98,47 @@ describe("metadataForTable", () => {
 
   it("returns null without metadata", () => {
     expect(metadataForTable(null, { name: "users" })).toBeNull();
+  });
+});
+
+describe("rlsState", () => {
+  const meta = normalizePostgresMeta({
+    rls: {
+      "digivacc.a": { enabled: true, forced: true },
+      "digivacc.b": { enabled: true },
+      "digivacc.c": { enabled: false },
+    },
+  });
+
+  it("reads forced, enabled and off", () => {
+    expect(rlsState(meta, { schema: "digivacc", name: "a" })).toBe("forced");
+    expect(rlsState(meta, { schema: "digivacc", name: "b" })).toBe("enabled");
+    expect(rlsState(meta, { schema: "digivacc", name: "c" })).toBe("off");
+  });
+
+  it("treats a missing table as off, and has no state without metadata or for stubs", () => {
+    expect(rlsState(meta, { schema: "digivacc", name: "d" })).toBe("off");
+    expect(rlsState(null, { name: "d" })).toBeNull();
+    expect(rlsState(meta, { name: "d", stub: true })).toBeNull();
+  });
+});
+
+describe("indexPostgresMeta", () => {
+  const lookup = indexPostgresMeta(normalizePostgresMeta(raw));
+
+  it("returns the same object for a table on every call", () => {
+    const table = { schema: "digivacc", name: "animals" };
+    expect(lookup(table)).toBe(lookup({ ...table }));
+    expect(lookup(table)).toMatchObject({ rlsState: "forced" });
+    expect(lookup(table).policies).toHaveLength(1);
+  });
+
+  it("returns off for an unknown table and null for a stub", () => {
+    expect(lookup({ name: "nope" }).rlsState).toBe("off");
+    expect(lookup({ name: "nope", stub: true })).toBeNull();
+  });
+
+  it("returns null without metadata", () => {
+    expect(indexPostgresMeta(null)).toBeNull();
   });
 });

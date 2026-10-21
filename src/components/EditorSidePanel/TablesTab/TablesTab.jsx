@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Collapse, Button, Select } from "@douyinfe/semi-ui";
+import { Collapse, Button, Select, Switch } from "@douyinfe/semi-ui";
 import { IconEyeOpened, IconEyeClosed } from "@douyinfe/semi-icons";
 import { IconPlus } from "@douyinfe/semi-icons";
 import {
@@ -10,7 +10,8 @@ import {
   useUndoRedo,
   useSettings,
 } from "../../../hooks";
-import { Action, ObjectType, State } from "../../../data/constants";
+import { Action, DB, ObjectType, State } from "../../../data/constants";
+import { rlsState } from "../../../utils/postgresMeta";
 import { useTranslation } from "react-i18next";
 import { DragHandle } from "../../SortableList/DragHandle";
 import { SortableList } from "../../SortableList/SortableList";
@@ -22,33 +23,35 @@ import { DEFAULT_SCHEMA, diagramSchemas } from "../../../utils/schema";
 const ALL_SCHEMAS = "\u0000all";
 
 export default function TablesTab() {
-  const { tables, addTable, setTables } = useDiagram();
+  const { tables, addTable, setTables, postgres, database } = useDiagram();
   const { selectedElement, setSelectedElement } = useSelect();
   const { t } = useTranslation();
   const { layout } = useLayout();
   const { setSaveState } = useSaveState();
   const [schemaFilter, setSchemaFilter] = useState(ALL_SCHEMAS);
+  const [rlsOffOnly, setRlsOffOnly] = useState(false);
+  const hasRls = database === DB.POSTGRES && !!postgres;
 
   const schemas = useMemo(() => diagramSchemas(tables), [tables]);
   const activeFilter =
     schemas.length > 1 && schemas.includes(schemaFilter)
       ? schemaFilter
       : ALL_SCHEMAS;
-  const visibleTables =
-    activeFilter === ALL_SCHEMAS
-      ? tables
-      : tables.filter((table) => (table.schema ?? "") === activeFilter);
+  const filterRls = hasRls && rlsOffOnly;
+  const isVisible = (table) =>
+    (activeFilter === ALL_SCHEMAS || (table.schema ?? "") === activeFilter) &&
+    (!filterRls || rlsState(postgres, table) === "off");
+  const isFiltered = activeFilter !== ALL_SCHEMAS || filterRls;
+  const visibleTables = isFiltered ? tables.filter(isVisible) : tables;
 
   const reorderVisible = (reordered) => {
-    if (activeFilter === ALL_SCHEMAS) {
+    if (!isFiltered) {
       setTables(reordered);
       return;
     }
     const queue = [...reordered];
     setTables(
-      tables.map((table) =>
-        (table.schema ?? "") === activeFilter ? queue.shift() : table,
-      ),
+      tables.map((table) => (isVisible(table) ? queue.shift() : table)),
     );
   };
 
@@ -81,6 +84,12 @@ export default function TablesTab() {
           ]}
           prefix={<span className="px-2 opacity-60">{t("schema")}</span>}
         />
+      )}
+      {hasRls && (
+        <label className="flex items-center gap-2 mt-2 text-sm cursor-pointer">
+          <Switch size="small" checked={rlsOffOnly} onChange={setRlsOffOnly} />
+          {t("rls_off_only")}
+        </label>
       )}
       {tables.length === 0 ? (
         <Empty title={t("no_tables")} text={t("no_tables_text")} />
