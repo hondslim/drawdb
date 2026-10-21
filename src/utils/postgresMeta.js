@@ -67,6 +67,8 @@ export function normalizePostgresMeta(meta) {
       ...withTable(index),
     })),
     views: list(meta.views),
+    columns: list(meta.columns).map(withTable),
+    foreignKeys: list(meta.foreignKeys).map(withTable),
   };
 }
 

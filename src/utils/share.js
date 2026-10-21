@@ -4,6 +4,7 @@ import { getRelationshipFields } from "./utils";
 import { normalizePostgresMeta } from "./postgresMeta";
 import { placeSqlViews, sqlViewTables } from "./sqlViews";
 import { applyIndexMetadata } from "./indexes";
+import { applyColumnMetadata } from "./columnDetails";
 
 function parsedField(field) {
   return {
@@ -18,6 +19,7 @@ function parsedField(field) {
     increment: !!field.increment,
     comment: field.comment ?? "",
     ...(field.values && { values: field.values }),
+    ...(field.isArray && { isArray: true }),
   };
 }
 
@@ -99,16 +101,27 @@ function sharedState(share) {
 }
 
 export function mergeShare(share, stored, shareId) {
+  return withColumnMetadata(mergeTables(share, stored, shareId), share);
+}
+
+function withColumnMetadata(record, share) {
+  const meta = normalizePostgresMeta(share.postgres);
+  const { tables, relationships } = applyColumnMetadata(
+    applyIndexMetadata(record.tables, meta),
+    record.references,
+    meta,
+  );
+  return { ...record, tables, references: relationships };
+}
+
+function mergeTables(share, stored, shareId) {
   const viewTables = sqlViewTables(share.postgres?.views);
   if (!stored) {
     return {
       ...sharedState(share),
       gistId: shareId,
       loadedFromGistId: shareId,
-      tables: applyIndexMetadata(
-        placeSqlViews(share.tables ?? [], viewTables),
-        normalizePostgresMeta(share.postgres),
-      ),
+      tables: placeSqlViews(share.tables ?? [], viewTables),
       references: share.relationships ?? [],
       enums: share.enums ?? [],
       notes: share.notes ?? [],
@@ -149,10 +162,7 @@ export function mergeShare(share, stored, shareId) {
     ...stored,
     ...sharedState(share),
     loadedFromGistId: shareId,
-    tables: applyIndexMetadata(
-      reconciled.tables,
-      normalizePostgresMeta(share.postgres),
-    ),
+    tables: reconciled.tables,
     references: reconciled.relationships,
     enums: reconciled.enums,
   };

@@ -22,6 +22,7 @@ const FIELD_KEYS = [
   "increment",
   "comment",
   "values",
+  "isArray",
 ];
 
 const RELATIONSHIP_KEYS = [

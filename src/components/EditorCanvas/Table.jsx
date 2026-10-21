@@ -599,6 +599,22 @@ export default memo(function Table({
               />
             ) : settings.showDataTypes ? (
               <div className="flex gap-1 items-center">
+                {fieldData.identity && (
+                  <span
+                    className="font-mono text-xs"
+                    title={`GENERATED ${fieldData.identity} AS IDENTITY`}
+                  >
+                    #
+                  </span>
+                )}
+                {fieldData.generated && (
+                  <span
+                    className="font-mono text-xs italic"
+                    title={`GENERATED ALWAYS AS (${fieldData.generated}) STORED`}
+                  >
+                    ƒ
+                  </span>
+                )}
                 {fieldData.check && (
                   <i
                     className="fa-solid fa-circle-check text-xs"
@@ -616,12 +632,22 @@ export default memo(function Table({
                     fieldResolved.isCustom ? { color: fieldResolved.color } : {}
                   }
                 >
-                  {fieldData.type +
+                  {fieldData.domain ? (
+                    <span
+                      className="italic"
+                      title={`domain over ${fieldData.type}`}
+                    >
+                      {fieldData.domain.split(".").pop()}
+                    </span>
+                  ) : (
+                    fieldData.type +
                     ((fieldResolved.isSized || fieldResolved.hasPrecision) &&
                     fieldData.size &&
                     fieldData.size !== ""
                       ? `(${fieldData.size})`
-                      : "")}
+                      : "")
+                  )}
+                  {fieldData.isArray && "[]"}
                 </span>
               </div>
             ) : null}
@@ -718,6 +744,24 @@ function FieldSummary({ field: e, tableId, database }) {
         <strong>{t("default_value")}: </strong>
         {e.default === "" ? t("not_set") : e.default}
       </p>
+      {e.identity && (
+        <p className="max-w-80">
+          <strong>{t("identity")}: </strong>
+          <span className="font-mono">GENERATED {e.identity} AS IDENTITY</span>
+        </p>
+      )}
+      {e.generated && (
+        <p className="max-w-80">
+          <strong>{t("generated")}: </strong>
+          <span className="font-mono">{e.generated}</span>
+        </p>
+      )}
+      {e.domain && (
+        <p className="max-w-80">
+          <strong>{t("domain")}: </strong>
+          <span className="font-mono">{e.domain}</span>
+        </p>
+      )}
       {e.check && (
         <p className="max-w-80">
           <strong>{t("check")}: </strong>

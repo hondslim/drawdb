@@ -14,6 +14,7 @@ import {
   darkBgTheme,
 } from "../../data/constants";
 import { fkOnEnd } from "../../utils/relationshipEnds";
+import { relationshipFlags } from "../../utils/columnDetails";
 import { calcPath, calcCompositePath } from "../../utils/calcPath";
 import { useSettings, useLayout, useSelect } from "../../hooks";
 import { useTranslation } from "react-i18next";
@@ -207,6 +208,7 @@ const RelationshipPath = memo(function RelationshipPath({
       end: { x: endPoint.x, y: endPoint.y },
       startEdge,
       endEdge,
+      mid: { x: labelPoint.x, y: labelPoint.y },
     });
   }, [d, composite, data.name, settings.showRelationshipLabels]);
 
@@ -246,6 +248,7 @@ const RelationshipPath = memo(function RelationshipPath({
     data.cardinality === Cardinality.ONE_TO_ONE ||
     data.cardinality === t(Cardinality.ONE_TO_ONE);
   const markerColor = data.color ?? "grey";
+  const flags = relationshipFlags(data);
   const markerBackground = settings.mode === "dark" ? darkBgTheme : "white";
 
   return (
@@ -282,6 +285,19 @@ const RelationshipPath = memo(function RelationshipPath({
           className="group-hover:fill-sky-600"
         >
           {data.name}
+        </text>
+      )}
+      {anchors && flags.length > 0 && (
+        <text
+          x={anchors.mid.x}
+          y={anchors.mid.y + (settings.showRelationshipLabels ? 22 : 4)}
+          textAnchor="middle"
+          fontSize={12}
+          fontWeight={700}
+          fill={flags.includes("CASCADE") ? "#b91c1c" : "#b45309"}
+          className="pointer-events-none"
+        >
+          {flags.join(" · ")}
         </text>
       )}
       {showCrowsFoot && settings.showCardinality && (

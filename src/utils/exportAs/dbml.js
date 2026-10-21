@@ -183,7 +183,7 @@ function tableBlock(table, database, enumNames) {
       (field) =>
         `\t${quoteIdentifier(field.name)} ${quoteIdentifier(
           dbmlTypeName(field, enumNames),
-        )}${dbmlFieldSize(field, database)}${columnSettings(field, database)}`,
+        )}${dbmlFieldSize(field, database)}${field.isArray ? "[]" : ""}${columnSettings(field, database)}`,
     )
     .join("\n");
   const comment =

@@ -354,6 +354,37 @@ export default function RelationshipInfo({ data }) {
         </>
       )}
 
+      <div className="font-semibold mt-3 mb-1">{t("deferrable")}:</div>
+      <Select
+        className="w-full"
+        value={data.deferrable ?? "NOT"}
+        optionList={[
+          { label: t("not_deferrable"), value: "NOT" },
+          { label: "INITIALLY IMMEDIATE", value: "IMMEDIATE" },
+          { label: "INITIALLY DEFERRED", value: "DEFERRED" },
+        ]}
+        onChange={(value) => {
+          if (layout.readOnly) return;
+          const next = value === "NOT" ? undefined : value;
+          setUndoStack((prev) => [
+            ...prev,
+            {
+              action: Action.EDIT,
+              element: ObjectType.RELATIONSHIP,
+              rid: data.id,
+              undo: { deferrable: data.deferrable },
+              redo: { deferrable: next },
+              message: t("edit_relationship", {
+                refName: data.name,
+                extra: "[deferrable]",
+              }),
+            },
+          ]);
+          setRedoStack([]);
+          updateRelationship(data.id, { deferrable: next });
+        }}
+      />
+
       <div className="font-semibold mt-3 mb-1">{t("optionality")}:</div>
       <Row gutter={6}>
         <Col span={12}>

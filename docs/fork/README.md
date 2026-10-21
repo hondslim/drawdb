@@ -22,3 +22,4 @@ Specs and plans for the issues on hondslim/drawdb. One file per issue.
 | #13 Database views from their SQL definition           | [13-sql-views.md](13-sql-views.md)                 |
 | #14 Index details                                      | [14-index-details.md](14-index-details.md)         |
 | #15 Grants per role                                    | [15-grants.md](15-grants.md)                       |
+| #16 Postgres column details                            | [16-column-details.md](16-column-details.md)       |

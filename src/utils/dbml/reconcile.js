@@ -104,6 +104,7 @@ function createField(parsed) {
   };
 
   if (parsed.size !== "") field.size = parsed.size;
+  if (parsed.isArray) field.isArray = true;
   if (isInlineEnumType(parsed.type)) field.values = parsed.values ?? [];
 
   return field;
@@ -129,6 +130,9 @@ function mergeField(parsed, base, database) {
       ? base.values
       : parsed.values ?? [];
   }
+
+  if (parsed.isArray) merged.isArray = true;
+  else delete merged.isArray;
 
   const size = resolveSize(parsed, base, type, database);
   if (size === undefined) delete merged.size;

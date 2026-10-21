@@ -53,10 +53,16 @@ function fieldDefault(column) {
 }
 
 function parseField(column, primaryKeyColumns) {
+  const rawType = String(column.type?.type_name ?? "");
+  const isArray = rawType.endsWith("[]");
+  const type = isArray
+    ? { ...column.type, type_name: rawType.slice(0, -2) }
+    : column.type;
   return {
     name: column.name,
-    type: baseTypeName(column.type).toUpperCase(),
-    size: column.type?.args ?? "",
+    type: baseTypeName(type).toUpperCase(),
+    ...(isArray && { isArray: true }),
+    size: type?.args ?? "",
     default: fieldDefault(column),
     primary: !!column.pk || primaryKeyColumns.has(column.name),
     unique: !!column.unique,

@@ -72,6 +72,14 @@ export function fromPostgres(ast, diagramDb = DB.GENERIC) {
             field.id = nanoid();
             field.name = d.column.column.expr.value;
 
+            if (d.definition.dataType.endsWith("[]") || d.definition.array) {
+              field.isArray = true;
+              d.definition.dataType = d.definition.dataType.replace(
+                /\[\]$/,
+                "",
+              );
+            }
+
             let type = types.find((t) =>
               new RegExp(`^(${t.name}|"${t.name}")$`).test(
                 d.definition.dataType,
@@ -97,6 +105,10 @@ export function fromPostgres(ast, diagramDb = DB.GENERIC) {
             if (d.unique) field.unique = true;
             field.increment = false;
             if (d.auto_increment) field.increment = true;
+            if (d.generated_by_default) {
+              field.increment = true;
+              field.identity = "BY DEFAULT";
+            }
             field.notNull = false;
             if (d.nullable) field.notNull = true;
             field.primary = false;
