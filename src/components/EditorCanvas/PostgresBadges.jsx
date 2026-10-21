@@ -19,6 +19,20 @@ export default function PostgresBadges({ meta }) {
       >
         <i className={RLS_ICONS[meta.rlsState]} />
       </span>
+      {meta.triggers.length > 0 && (
+        <span
+          className="flex items-center gap-1"
+          title={meta.triggers
+            .map(
+              (trigger) =>
+                `${trigger.name}: ${trigger.timing} ${trigger.events.join(" OR ")}`,
+            )
+            .join("\n")}
+        >
+          <i className="fa-solid fa-bolt" />
+          {meta.triggers.length}
+        </span>
+      )}
     </div>
   );
 }
