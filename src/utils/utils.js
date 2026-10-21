@@ -1,4 +1,5 @@
 import { dbToTypes } from "../data/datatypes";
+import { orderFieldEntries } from "./fieldOrder";
 
 import {
   tableFieldHeight,
@@ -206,15 +207,16 @@ export function isFieldRelatedToTable(
 export function getVisibleFieldEntries(table, relationships = []) {
   const fields = table.fields ?? [];
 
-  return fields.reduce((entries, field, index) => {
+  const entries = fields.reduce((visible, field, index) => {
     if (
       !table.collapsed ||
       isFieldRelatedToTable(table.id, field, index, relationships)
     ) {
-      entries.push({ field, originalIndex: index });
+      visible.push({ field, originalIndex: index });
     }
-    return entries;
+    return visible;
   }, []);
+  return orderFieldEntries(entries, table.id, relationships);
 }
 
 export function getVisibleFields(table, relationships = []) {

@@ -25,3 +25,4 @@ Specs and plans for the issues on hondslim/drawdb. One file per issue.
 | #16 Postgres column details                            | [16-column-details.md](16-column-details.md)       |
 | #20 Subject areas from the payload                     | [20-subject-areas.md](20-subject-areas.md)         |
 | #21 Schema diff between two versions                   | [21-schema-diff.md](21-schema-diff.md)             |
+| Canvas field order (no issue)                          | [canvas-field-order.md](canvas-field-order.md)     |
