@@ -16,6 +16,7 @@ export default function DiagramContextProvider({ children }) {
   const [tables, setTables] = useState([]);
   const [relationships, setRelationships] = useState([]);
   const [sqlHeader, setSqlHeaderRaw] = useState("");
+  const [postgres, setPostgres] = useState(null);
   const { transform } = useTransform();
   const { setUndoStack, setRedoStack } = useUndoRedo();
   const { selectedElement, setSelectedElement } = useSelect();
@@ -355,6 +356,7 @@ export default function DiagramContextProvider({ children }) {
       setRelationships,
       setDatabase,
       setSqlHeader,
+      setPostgres,
     }),
     [setDatabase, setSqlHeader],
   );
@@ -366,10 +368,11 @@ export default function DiagramContextProvider({ children }) {
       relationships,
       database,
       sqlHeader,
+      postgres,
       tablesCount: tables.length,
       relationshipsCount: relationships.length,
     }),
-    [actions, tables, relationships, database, sqlHeader],
+    [actions, tables, relationships, database, sqlHeader, postgres],
   );
 
   return (

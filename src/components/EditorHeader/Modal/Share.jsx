@@ -35,7 +35,7 @@ export default function Share({ title, setModal }) {
   const { t } = useTranslation();
   const { gistId, setGistId } = useContext(IdContext);
   const [loading, setLoading] = useState(true);
-  const { tables, relationships, database, sqlHeader } = useDiagram();
+  const { tables, relationships, database, sqlHeader, postgres } = useDiagram();
   const { notes } = useNotes();
   const { areas } = useAreas();
   const { types } = useTypes();
@@ -91,6 +91,7 @@ export default function Share({ title, setModal }) {
       views: views,
       database: database,
       ...(sqlHeader && { sqlHeader: sqlHeader }),
+      ...(postgres && { postgres: postgres }),
       ...(databases[database].hasTypes && { types: types }),
       ...(databases[database].hasEnums && { enums: enums }),
       ...(hasCustomTypes && { customTypes: usedCustomTypes }),
@@ -107,6 +108,7 @@ export default function Share({ title, setModal }) {
     types,
     views,
     sqlHeader,
+    postgres,
     transform,
   ]);
 

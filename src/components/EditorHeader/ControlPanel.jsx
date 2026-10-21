@@ -164,6 +164,7 @@ export default function ControlPanel({
     updateRelationship,
     database,
     sqlHeader,
+    postgres,
   } = useDiagram();
   const { enums, setEnums, deleteEnum, addEnum, updateEnum } = useEnums();
   const { types, addType, deleteType, updateType, setTypes } = useTypes();
@@ -1067,6 +1068,7 @@ export default function ControlPanel({
         areas,
         views,
         sqlHeader,
+        postgres,
         pan: transform.pan,
         zoom: transform.zoom,
         ...(databases[database].hasEnums && { enums }),
@@ -1128,6 +1130,7 @@ export default function ControlPanel({
       areas,
       views,
       sqlHeader,
+      postgres,
       pan: transform.pan,
       zoom: transform.zoom,
       ...(databases[database].hasEnums && { enums }),
@@ -1255,6 +1258,7 @@ export default function ControlPanel({
               subjectAreas: areas,
               views: views,
               sqlHeader: sqlHeader,
+              postgres: postgres,
               custom: 1,
               templateId: uuidv4(),
               ...(databases[database].hasEnums && { enums: enums }),
@@ -1577,6 +1581,7 @@ export default function ControlPanel({
                   ...(databases[database].hasTypes && { types: types }),
                   ...(databases[database].hasEnums && { enums: enums }),
                   ...(sqlHeader && { sqlHeader: sqlHeader }),
+                  ...(postgres && { postgres: postgres }),
                   title: title,
                 },
                 null,

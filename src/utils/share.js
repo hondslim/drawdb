@@ -1,6 +1,7 @@
 import { reconcileDbml } from "./dbml/reconcile";
 import { tableKey } from "./schema";
 import { getRelationshipFields } from "./utils";
+import { normalizePostgresMeta } from "./postgresMeta";
 
 function parsedField(field) {
   return {
@@ -90,6 +91,7 @@ function sharedState(share) {
     views: share.views ?? [],
     types: share.types ?? [],
     sqlHeader: share.sqlHeader ?? "",
+    postgres: normalizePostgresMeta(share.postgres),
     lastModified: new Date(),
   };
 }

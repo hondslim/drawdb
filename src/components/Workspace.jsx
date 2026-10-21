@@ -44,6 +44,7 @@ import {
 import { get, SHARE_FILENAME } from "../api/gists";
 import { mergeCustomTypes } from "../utils/customTypes";
 import { mergeShare } from "../utils/share";
+import { normalizePostgresMeta } from "../utils/postgresMeta";
 import {
   readDismissedBanners,
   addDismissedBanner,
@@ -96,6 +97,8 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
     setDatabase,
     sqlHeader,
     setSqlHeader,
+    postgres,
+    setPostgres,
   } = useDiagram();
   const { undoStack, redoStack, setUndoStack, setRedoStack } = useUndoRedo();
   const { t, i18n } = useTranslation();
@@ -132,6 +135,7 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
       areas,
       views,
       sqlHeader,
+      postgres,
       pan: transform.pan,
       zoom: transform.zoom,
       ...(databases[database].hasEnums && { enums }),
@@ -147,6 +151,7 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
       areas,
       views,
       sqlHeader,
+      postgres,
       transform,
       enums,
       types,
@@ -210,6 +215,7 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
           areas: areas,
           views: views,
           sqlHeader: sqlHeader,
+          postgres: postgres,
           pan: transform.pan,
           zoom: transform.zoom,
           loadedFromGistId: loadedFromGistId,
@@ -235,6 +241,7 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
           areas: areas,
           views: views,
           sqlHeader: sqlHeader,
+          postgres: postgres,
           gistId: gistId ?? "",
           pan: transform.pan,
           zoom: transform.zoom,
@@ -274,6 +281,7 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
     loadedDiagramId,
     navigate,
     layout.viewer,
+    postgres,
   ]);
 
   const moveToCloud = useCallback(async () => {
@@ -335,6 +343,7 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
       setEnums(diagram.enums ?? []);
       setViews(diagram.views ?? []);
       setSqlHeader(diagram.sqlHeader ?? "");
+      setPostgres(normalizePostgresMeta(diagram.postgres));
     };
 
     const resetEditorState = () => {
@@ -346,6 +355,7 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
       setEnums([]);
       setViews([]);
       setSqlHeader("");
+      setPostgres(null);
       setUndoStack([]);
       setRedoStack([]);
       setTransform({ zoom: 1, pan: { x: 0, y: 0 } });
@@ -412,6 +422,7 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
       setEnums(template.enums ?? []);
       setViews(template.views ?? []);
       setSqlHeader(template.sqlHeader ?? "");
+      setPostgres(normalizePostgresMeta(template.postgres));
     };
 
     const importShare = async (shareId) => {
@@ -497,6 +508,7 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
     isTemplate,
     loadedDiagramId,
     cloudOnly,
+    setPostgres,
   ]);
 
   const reloadFromSource = () => {

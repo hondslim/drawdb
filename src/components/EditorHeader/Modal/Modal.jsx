@@ -8,6 +8,7 @@ import {
 } from "@douyinfe/semi-ui";
 import { saveAs } from "file-saver";
 import { Parser } from "node-sql-parser";
+import { normalizePostgresMeta } from "../../../utils/postgresMeta";
 import { Parser as OracleParser } from "oracle-sql-parser";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -66,7 +67,8 @@ export default function Modal({
   saveAsCopy,
 }) {
   const { t, i18n } = useTranslation();
-  const { setTables, setRelationships, database, setSqlHeader } = useDiagram();
+  const { setTables, setRelationships, database, setSqlHeader, setPostgres } =
+    useDiagram();
   const { setNotes } = useNotes();
   const { setAreas } = useAreas();
   const { setTypes } = useTypes();
@@ -117,6 +119,7 @@ export default function Modal({
       mergeCustomTypes(importData.customTypes);
     }
     setSqlHeader(importData.sqlHeader ?? "");
+    setPostgres(normalizePostgresMeta(importData.postgres));
   };
 
   const parseSQLAndLoadDiagram = () => {

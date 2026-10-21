@@ -100,6 +100,23 @@ describe("mergeShare", () => {
     expect(merged.references).toHaveLength(2);
   });
 
+  it("takes postgres metadata from the share, and null without it", () => {
+    const stored = mergeShare(share(v1), null, "X");
+    expect(stored.postgres).toBeNull();
+    const merged = mergeShare(
+      {
+        ...share(v1),
+        postgres: { rls: { "digivacc.owners": { enabled: true } } },
+      },
+      stored,
+      "X",
+    );
+    expect(merged.postgres.rls["digivacc.owners"]).toEqual({
+      enabled: true,
+      forced: false,
+    });
+  });
+
   it("drops a table that left the share", () => {
     const stored = mergeShare(share(v2), null, "X");
     const merged = mergeShare(share(v1), stored, "X");
