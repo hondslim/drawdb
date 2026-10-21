@@ -119,3 +119,19 @@ COMMENT ON TABLE digivacc.users IS 'app users';
     expect(byKey("auth", "users").comment).toBe("");
   });
 });
+
+describe("schemas and stub tables", () => {
+  it("does not count a stub's schema", async () => {
+    const { hasMultipleSchemas, diagramSchemas } = await import("../schema");
+    const tables = [
+      { name: "animals", schema: "digivacc" },
+      { name: "owners", schema: "digivacc" },
+      { name: "users", schema: "auth", stub: true },
+    ];
+    expect(hasMultipleSchemas(tables)).toBe(false);
+    expect(diagramSchemas(tables)).toEqual(["digivacc"]);
+    expect(
+      hasMultipleSchemas([...tables, { name: "users", schema: "auth" }]),
+    ).toBe(true);
+  });
+});

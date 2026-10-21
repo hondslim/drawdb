@@ -118,7 +118,10 @@ export default function TablesTab() {
             onChange={reorderVisible}
             afterChange={() => setSaveState(State.SAVING)}
             renderItem={(item) => (
-              <TableListItem table={item} showSchema={schemas.length > 1} />
+              <TableListItem
+                table={item}
+                showSchema={schemas.length > 1 || !!item.stub}
+              />
             )}
           />
         </Collapse>

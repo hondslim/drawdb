@@ -21,7 +21,11 @@ export function findTable(tables, schema, name) {
 }
 
 export function diagramSchemas(tables) {
-  return [...new Set(tables.map((table) => table.schema ?? ""))];
+  return [
+    ...new Set(
+      tables.filter((table) => !table.stub).map((table) => table.schema ?? ""),
+    ),
+  ];
 }
 
 export function hasMultipleSchemas(tables) {

@@ -6,6 +6,7 @@
 - A table is identified by `(schema, name)`. `digivacc.users` and `auth.users` are two tables, and a duplicate-name issue is raised only when both schema and name match.
 - DBML import keeps `schemaName`. `public` maps to the default schema, so unqualified DBML round-trips unchanged. Refs resolve by `(schema, table)`.
 - Postgres SQL import keeps the schema from `CREATE TABLE s.t`, and resolves `REFERENCES`, `ALTER TABLE`, `CREATE INDEX ... ON` and `COMMENT ON` by `(schema, table)`.
+- Stub tables (#5) do not count towards the number of schemas; they always show their qualified name.
 - When the diagram has more than one schema, the canvas header shows `schema.` before the name (muted), and the Tables tab shows a schema filter. With one schema, both look as they do today.
 - The table details panel has a Schema input for Postgres diagrams, and for any table that already has a schema.
 - DBML export writes `schema.table` for tables with a schema, in `Table` and `Ref` lines.
