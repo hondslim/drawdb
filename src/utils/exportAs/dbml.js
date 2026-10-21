@@ -35,6 +35,28 @@ function columnDefault(field, database) {
   return `default: ${parseDefaultDbml(field, database)}`;
 }
 
+function checkExpression(expression) {
+  return `\`${String(expression).replace(/`/g, "\\`")}\``;
+}
+
+function columnCheck(field) {
+  if (!field.check || !String(field.check).trim()) return "";
+  return `check: ${checkExpression(field.check)}`;
+}
+
+function checksBlock(table) {
+  const entries = (table.checks ?? [])
+    .filter((check) => String(check.expression ?? "").trim())
+    .map(
+      (check) =>
+        `\t\t${checkExpression(check.expression)}${
+          check.name ? ` [name: '${escapeQuotes(String(check.name))}']` : ""
+        }`,
+    );
+  if (!entries.length) return "";
+  return `\n\n\tchecks {\n${entries.join("\n")}\n\t}`;
+}
+
 function columnSettings(field, database) {
   const constraints = [
     field.primary && "pk",
@@ -42,6 +64,7 @@ function columnSettings(field, database) {
     field.notNull && "not null",
     field.unique && "unique",
     columnDefault(field, database),
+    columnCheck(field),
     columnComment(field),
   ].filter(Boolean);
 
@@ -160,7 +183,7 @@ function tableBlock(table, database, enumNames) {
       ? `\n\n\tNote: ${processComment(table.comment)}`
       : "";
 
-  return `Table ${tableName(table)}${headerColor} {\n${fields}${indexesBlock(table)}${comment}\n}`;
+  return `Table ${tableName(table)}${headerColor} {\n${fields}${indexesBlock(table)}${checksBlock(table)}${comment}\n}`;
 }
 
 function columnRef(table, fieldNames) {

@@ -300,6 +300,21 @@ export default memo(function Table({
                 )}
                 {tableData.name}
               </div>
+              {tableData.checks?.length > 0 && (
+                <div
+                  className="group-hover:hidden shrink-0 pe-3 text-xs font-normal opacity-70 flex items-center gap-1"
+                  title={tableData.checks
+                    .map((check) =>
+                      check.name
+                        ? `${check.name}: ${check.expression}`
+                        : check.expression,
+                    )
+                    .join("\n")}
+                >
+                  <i className="fa-solid fa-circle-check" />
+                  {tableData.checks.length}
+                </div>
+              )}
               <div className="hidden group-hover:flex items-center shrink-0 pe-2">
                 <ButtonGroup
                   type="tertiary"
@@ -543,6 +558,12 @@ export default memo(function Table({
               />
             ) : settings.showDataTypes ? (
               <div className="flex gap-1 items-center">
+                {fieldData.check && (
+                  <i
+                    className="fa-solid fa-circle-check text-xs"
+                    title={fieldData.check}
+                  />
+                )}
                 {fieldData.primary && <IconKeyStroked />}
                 {!fieldData.notNull && <span className="font-mono">?</span>}
                 <span
@@ -656,6 +677,12 @@ function FieldSummary({ field: e, tableId, database }) {
         <strong>{t("default_value")}: </strong>
         {e.default === "" ? t("not_set") : e.default}
       </p>
+      {e.check && (
+        <p className="max-w-80">
+          <strong>{t("check")}: </strong>
+          <span className="font-mono">{e.check}</span>
+        </p>
+      )}
       <p className="max-w-80">
         <strong>{t("comment")}: </strong>
         {e.comment === "" ? t("not_set") : e.comment}

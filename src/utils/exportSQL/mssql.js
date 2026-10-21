@@ -2,7 +2,7 @@ import { appendViews } from "../views";
 import {
   parseDefault,
   escapeQuotes,
-  uniqueConstraintClause,
+  tableConstraintClause,
   getFkColumnNames,
 } from "./shared";
 
@@ -70,7 +70,7 @@ function tablesToMSSQL(diagram) {
               .join(", ")})`
           : "";
 
-      const uniqueSql = uniqueConstraintClause(table, (s) => `[${s}]`);
+      const uniqueSql = tableConstraintClause(table, (s) => `[${s}]`);
 
       const createTableSql = `CREATE TABLE [${table.name}] (\n${fieldsSql}${primaryKeySql}${uniqueSql}\n);\nGO\n`;
 
@@ -113,8 +113,7 @@ function tablesToMSSQL(diagram) {
         endTable,
       );
 
-      if (startColumns.some((c) => !c) || endColumns.some((c) => !c))
-        return "";
+      if (startColumns.some((c) => !c) || endColumns.some((c) => !c)) return "";
 
       return `\nALTER TABLE [${startTable.name}]
 ADD FOREIGN KEY(${startColumns.map((c) => `[${c}]`).join(", ")})

@@ -2,7 +2,7 @@ import { appendViews } from "../views";
 import {
   escapeQuotes,
   parseDefault,
-  uniqueConstraintClause,
+  tableConstraintClause,
   getFkColumnNames,
 } from "./shared";
 
@@ -57,7 +57,7 @@ function tablesToMySQL(diagram) {
                 .map((f) => `\`${f.name}\``)
                 .join(", ")})`
             : ""
-        }${uniqueConstraintClause(table, (s) => `\`${s}\``)}\n)${table.comment ? ` COMMENT='${escapeQuotes(table.comment)}'` : ""};\n${`\n${table.indices
+        }${tableConstraintClause(table, (s) => `\`${s}\``)}\n)${table.comment ? ` COMMENT='${escapeQuotes(table.comment)}'` : ""};\n${`\n${table.indices
           .map(
             (i) =>
               `\nCREATE ${i.unique ? "UNIQUE " : ""}INDEX \`${
@@ -85,7 +85,9 @@ function tablesToMySQL(diagram) {
         .map((c) => `\`${c}\``)
         .join(", ")}) REFERENCES \`${endName}\`(${endColumns
         .map((c) => `\`${c}\``)
-        .join(", ")})\nON UPDATE ${r.updateConstraint.toUpperCase()} ON DELETE ${r.deleteConstraint.toUpperCase()};`;
+        .join(
+          ", ",
+        )})\nON UPDATE ${r.updateConstraint.toUpperCase()} ON DELETE ${r.deleteConstraint.toUpperCase()};`;
     })
     .join("\n")}`;
 }

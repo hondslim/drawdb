@@ -43,9 +43,7 @@ describe("parseDbml with DBML 10.x", () => {
 
   it("keeps column checks", () => {
     const birthDate = animals.fields.find((f) => f.name === "birth_date");
-    expect(birthDate.checks).toEqual([
-      { name: "", expression: "birth_date <= now()" },
-    ]);
+    expect(birthDate.check).toBe("birth_date <= now()");
   });
 
   it("keeps table checks with their names", () => {

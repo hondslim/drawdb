@@ -143,6 +143,8 @@ const en = {
     add_index: "Add index",
     unique_constraints: "Unique constraints",
     add_unique_constraint: "Add unique constraint",
+    checks: "Checks",
+    add_check: "Add check",
     select_fields: "Select columns",
     title: "Title",
     not_set: "Not set",

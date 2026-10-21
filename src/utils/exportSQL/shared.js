@@ -46,6 +46,29 @@ export function exportFieldComment(comment) {
     .join("");
 }
 
+export function tableConstraintClause(table, quote) {
+  return (
+    uniqueConstraintClause(table, quote) + checkConstraintClause(table, quote)
+  );
+}
+
+function checkConstraintClause(table, quote) {
+  const checks = (table.checks || []).filter((check) =>
+    String(check.expression ?? "").trim(),
+  );
+  if (checks.length === 0) return "";
+
+  return (
+    ",\n" +
+    checks
+      .map(
+        (check) =>
+          `\t${check.name ? `CONSTRAINT ${quote(check.name)} ` : ""}CHECK (${check.expression})`,
+      )
+      .join(",\n")
+  );
+}
+
 export function uniqueConstraintClause(table, quote) {
   const constraints = (table.uniqueConstraints || []).filter(
     (uc) => Array.isArray(uc.fields) && uc.fields.length > 0,
@@ -70,17 +93,15 @@ export function getInlineFK(table, obj) {
   obj.references.forEach((r) => {
     if (r.startTableId === table.id) {
       const endTable = obj.tables.find((t) => t.id === r.endTableId);
-      const { startColumns, endColumns } = getFkColumnNames(
-        r,
-        table,
-        endTable,
-      );
+      const { startColumns, endColumns } = getFkColumnNames(r, table, endTable);
       fks.push(
         `\tFOREIGN KEY (${startColumns
           .map((c) => `"${c}"`)
           .join(", ")}) REFERENCES "${endTable?.name}"(${endColumns
           .map((c) => `"${c}"`)
-          .join(", ")})\n\tON UPDATE ${r.updateConstraint.toUpperCase()} ON DELETE ${r.deleteConstraint.toUpperCase()}`,
+          .join(
+            ", ",
+          )})\n\tON UPDATE ${r.updateConstraint.toUpperCase()} ON DELETE ${r.deleteConstraint.toUpperCase()}`,
       );
     }
   });

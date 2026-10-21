@@ -2,7 +2,7 @@ import { appendViews } from "../views";
 import { dbToTypes } from "../../data/datatypes";
 import {
   parseDefault,
-  uniqueConstraintClause,
+  tableConstraintClause,
   getFkColumnNames,
 } from "./shared";
 
@@ -52,7 +52,7 @@ function tablesToOracleSQL(diagram) {
                 .map((f) => `"${f.name}"`)
                 .join(", ")})`
             : ""
-        }${uniqueConstraintClause(table, (s) => `"${s}"`)}\n);\n${`\n${table.indices
+        }${tableConstraintClause(table, (s) => `"${s}"`)}\n);\n${`\n${table.indices
           .map(
             (i) =>
               `\nCREATE ${i.unique ? "UNIQUE " : ""}INDEX "${i.name}"\nON "${table.name}" (${i.fields

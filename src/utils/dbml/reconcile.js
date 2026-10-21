@@ -93,7 +93,7 @@ function createField(parsed) {
     name: parsed.name,
     type: parsed.type,
     default: parsed.default,
-    check: "",
+    check: parsed.check ?? "",
     primary: parsed.primary,
     unique: parsed.unique,
     notNull: parsed.notNull,
@@ -114,6 +114,7 @@ function mergeField(parsed, base, database) {
     name: parsed.name,
     type,
     default: resolveDefault(parsed, base),
+    check: parsed.check ?? "",
     primary: parsed.primary,
     unique: parsed.unique,
     notNull: parsed.notNull,
@@ -189,8 +190,22 @@ function mergeTable(parsed, base, database) {
     comment: parsed.comment,
     color: parsed.color ?? base.color,
     fields: reconcileFields(parsed.fields, base.fields ?? [], database),
+    checks: reconcileChecks(parsed.checks, base.checks),
     ...reconcileIndexes(parsed.indices, base),
   };
+}
+
+function reconcileChecks(parsedChecks = [], baseChecks) {
+  if (!parsedChecks.length && !Array.isArray(baseChecks)) return baseChecks;
+  const same =
+    Array.isArray(baseChecks) &&
+    baseChecks.length === parsedChecks.length &&
+    baseChecks.every(
+      (check, i) =>
+        check.name === parsedChecks[i].name &&
+        check.expression === parsedChecks[i].expression,
+    );
+  return same ? baseChecks : parsedChecks;
 }
 
 function createTable(parsed) {
@@ -208,6 +223,7 @@ function createTable(parsed) {
       unique: index.unique,
     })),
     uniqueConstraints: [],
+    checks: parsed.checks ?? [],
     locked: false,
     collapsed: false,
   };

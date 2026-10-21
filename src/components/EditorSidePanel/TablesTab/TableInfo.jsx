@@ -20,6 +20,7 @@ import { Action, ObjectType, State, DB } from "../../../data/constants";
 import TableField from "./TableField";
 import IndexDetails from "./IndexDetails";
 import UniqueConstraintDetails from "./UniqueConstraintDetails";
+import CheckDetails from "./CheckDetails";
 import { useTranslation } from "react-i18next";
 import { SortableList } from "../../SortableList/SortableList";
 import { nanoid } from "nanoid";
@@ -31,6 +32,7 @@ export default function TableInfo({ data }) {
   const [indexActiveKey, setIndexActiveKey] = useState("");
   const [uniqueActiveKey, setUniqueActiveKey] = useState("");
   const [commentActiveKey, setCommentActiveKey] = useState("");
+  const [checkActiveKey, setCheckActiveKey] = useState("");
   const [showComment, setShowComment] = useState(false);
   const { layout } = useLayout();
   const { deleteTable, updateTable, setTables } = useDiagram();
@@ -141,6 +143,32 @@ export default function TableInfo({ data }) {
         },
       ],
     });
+  };
+
+  const addCheck = () => {
+    setCheckActiveKey("1");
+    const checks = data.checks ?? [];
+    const next = [
+      ...checks,
+      { name: `${data.name}_check_${checks.length}`, expression: "" },
+    ];
+    setUndoStack((prev) => [
+      ...prev,
+      {
+        action: Action.EDIT,
+        element: ObjectType.TABLE,
+        component: "self",
+        tid: data.id,
+        undo: { checks },
+        redo: { checks: next },
+        message: t("edit_table", {
+          tableName: data.name,
+          extra: "[add check]",
+        }),
+      },
+    ]);
+    setRedoStack([]);
+    updateTable(data.id, { checks: next });
   };
 
   const addComment = () => {
@@ -336,6 +364,29 @@ export default function TableInfo({ data }) {
         </Card>
       )}
 
+      {(data.checks ?? []).length > 0 && (
+        <Card
+          bodyStyle={{ padding: "4px" }}
+          style={{ marginTop: "12px", marginBottom: "12px" }}
+          headerLine={false}
+        >
+          <Collapse
+            activeKey={checkActiveKey}
+            keepDOM={false}
+            lazyRender
+            onChange={(itemKey) => setCheckActiveKey(itemKey)}
+            accordion
+          >
+            <Collapse.Panel
+              header={`${t("checks")} (${data.checks.length})`}
+              itemKey="1"
+            >
+              <CheckDetails table={data} />
+            </Collapse.Panel>
+          </Collapse>
+        </Card>
+      )}
+
       {((data.comment && data.comment.trim() !== "") || showComment) && (
         <Card
           bodyStyle={{ padding: "4px" }}
@@ -408,6 +459,9 @@ export default function TableInfo({ data }) {
                 </Dropdown.Item>
                 <Dropdown.Item onClick={addIndex}>
                   {t("add_index")}
+                </Dropdown.Item>
+                <Dropdown.Item onClick={addCheck}>
+                  {t("add_check")}
                 </Dropdown.Item>
               </Dropdown.Menu>
             }

@@ -5,7 +5,7 @@ import {
   escapeQuotes,
   getInlineFK,
   parseDefault,
-  uniqueConstraintClause,
+  tableConstraintClause,
   getFkColumnNames,
 } from "./shared";
 
@@ -225,7 +225,7 @@ function tablesToMySQL(obj) {
                 .map((f) => `\`${f.name}\``)
                 .join(", ")})`
             : ""
-        }${uniqueConstraintClause(table, (s) => `\`${s}\``)}\n)${table.comment ? ` COMMENT='${escapeQuotes(table.comment)}'` : ""};\n${`\n${table.indices
+        }${tableConstraintClause(table, (s) => `\`${s}\``)}\n)${table.comment ? ` COMMENT='${escapeQuotes(table.comment)}'` : ""};\n${`\n${table.indices
           .map(
             (i) =>
               `CREATE ${i.unique ? "UNIQUE " : ""}INDEX \`${i.name}\`\nON \`${table.name}\` (${i.fields
@@ -251,7 +251,9 @@ function tablesToMySQL(obj) {
         .map((c) => `\`${c}\``)
         .join(", ")}) REFERENCES \`${endName}\`(${endColumns
         .map((c) => `\`${c}\``)
-        .join(", ")})\nON UPDATE ${r.updateConstraint.toUpperCase()} ON DELETE ${r.deleteConstraint.toUpperCase()};`;
+        .join(
+          ", ",
+        )})\nON UPDATE ${r.updateConstraint.toUpperCase()} ON DELETE ${r.deleteConstraint.toUpperCase()};`;
     })
     .join("\n")}`;
 }
@@ -320,7 +322,7 @@ function tablesToPostgreSQL(obj) {
               .map((f) => `"${f.name}"`)
               .join(", ")})`
           : ""
-      }${uniqueConstraintClause(table, (s) => `"${s}"`)}\n);`;
+      }${tableConstraintClause(table, (s) => `"${s}"`)}\n);`;
       const commentStatements = [
         table.comment != ""
           ? `COMMENT ON TABLE ${table.name} IS '${escapeQuotes(table.comment)}';`
@@ -371,7 +373,9 @@ function tablesToPostgreSQL(obj) {
         .map((c) => `"${c}"`)
         .join(", ")}) REFERENCES "${endName}"(${endColumns
         .map((c) => `"${c}"`)
-        .join(", ")})\nON UPDATE ${r.updateConstraint.toUpperCase()} ON DELETE ${r.deleteConstraint.toUpperCase()};`;
+        .join(
+          ", ",
+        )})\nON UPDATE ${r.updateConstraint.toUpperCase()} ON DELETE ${r.deleteConstraint.toUpperCase()};`;
     })
     .join("\n");
 
@@ -440,7 +444,7 @@ function tablesToSQLite(obj) {
               .map((f) => `"${f.name}"`)
               .join(", ")})`
           : ""
-      }${inlineFK !== "" ? ",\n" : ""}${inlineFK}${uniqueConstraintClause(table, (s) => `"${s}"`)}\n);\n${table.indices
+      }${inlineFK !== "" ? ",\n" : ""}${inlineFK}${tableConstraintClause(table, (s) => `"${s}"`)}\n);\n${table.indices
         .map(
           (i) =>
             `\nCREATE ${i.unique ? "UNIQUE " : ""}INDEX IF NOT EXISTS "${
@@ -489,7 +493,7 @@ function tablesToMariaDB(obj) {
                 .map((f) => `\`${f.name}\``)
                 .join(", ")})`
             : ""
-        }${uniqueConstraintClause(table, (s) => `\`${s}\``)}\n)${table.comment ? ` COMMENT='${escapeQuotes(table.comment)}'` : ""};${`\n${table.indices
+        }${tableConstraintClause(table, (s) => `\`${s}\``)}\n)${table.comment ? ` COMMENT='${escapeQuotes(table.comment)}'` : ""};${`\n${table.indices
           .map(
             (i) =>
               `CREATE ${i.unique ? "UNIQUE " : ""}INDEX \`${
@@ -517,7 +521,9 @@ function tablesToMariaDB(obj) {
         .map((c) => `\`${c}\``)
         .join(", ")}) REFERENCES \`${endName}\`(${endColumns
         .map((c) => `\`${c}\``)
-        .join(", ")})\nON UPDATE ${r.updateConstraint.toUpperCase()} ON DELETE ${r.deleteConstraint.toUpperCase()};`;
+        .join(
+          ", ",
+        )})\nON UPDATE ${r.updateConstraint.toUpperCase()} ON DELETE ${r.deleteConstraint.toUpperCase()};`;
     })
     .join("\n")}`;
 }
@@ -567,7 +573,7 @@ function tablesToSQLServer(obj) {
                 .map((f) => `[${f.name}]`)
                 .join(", ")})`
             : ""
-        }${uniqueConstraintClause(table, (s) => `[${s}]`)}\n);\nGO\n${table.indices
+        }${tableConstraintClause(table, (s) => `[${s}]`)}\n);\nGO\n${table.indices
           .map(
             (i) =>
               `\nCREATE ${i.unique ? "UNIQUE " : ""}INDEX [${
@@ -595,7 +601,9 @@ function tablesToSQLServer(obj) {
         .map((c) => `[${c}]`)
         .join(", ")}) REFERENCES [${endName}](${endColumns
         .map((c) => `[${c}]`)
-        .join(", ")})\nON UPDATE ${r.updateConstraint.toUpperCase()} ON DELETE ${r.deleteConstraint.toUpperCase()};\nGO`;
+        .join(
+          ", ",
+        )})\nON UPDATE ${r.updateConstraint.toUpperCase()} ON DELETE ${r.deleteConstraint.toUpperCase()};\nGO`;
     })
     .join("\n")}`;
 }
@@ -646,7 +654,7 @@ function tablesToOracleSQL(obj) {
                 .map((f) => `"${f.name}"`)
                 .join(", ")})`
             : ""
-        }${uniqueConstraintClause(table, (s) => `"${s}"`)}\n);\n${table.indices
+        }${tableConstraintClause(table, (s) => `"${s}"`)}\n);\n${table.indices
           .map(
             (i) =>
               `\nCREATE ${i.unique ? "UNIQUE " : ""}INDEX "${i.name}"\n  ON "${

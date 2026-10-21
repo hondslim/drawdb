@@ -75,6 +75,18 @@ export const tableSchema = {
       type: "array",
       items: { type: ["string"] },
     },
+    schema: { type: "string" },
+    checks: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          expression: { type: "string" },
+        },
+        required: ["expression"],
+      },
+    },
   },
   required: ["id", "name", "x", "y", "fields", "comment", "indices", "color"],
 };

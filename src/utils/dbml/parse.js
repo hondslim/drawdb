@@ -61,8 +61,15 @@ function parseField(column, primaryKeyColumns) {
     notNull: !!column.not_null,
     increment: !!column.increment,
     comment: column.note ?? "",
-    checks: parseChecks(column.checks),
+    check: joinChecks(
+      parseChecks(column.checks).filter((check) => !check.name),
+    ),
   };
+}
+
+function joinChecks(checks) {
+  if (checks.length <= 1) return checks[0]?.expression ?? "";
+  return checks.map((check) => `(${check.expression})`).join(" AND ");
 }
 
 function parseTable(table) {
@@ -77,7 +84,12 @@ function parseTable(table) {
     comment: table.note ?? "",
     color: table.headerColor ?? null,
     fields: table.fields.map((field) => parseField(field, primaryKeyColumns)),
-    checks: parseChecks(table.checks),
+    checks: [
+      ...table.fields.flatMap((column) =>
+        parseChecks(column.checks).filter((check) => check.name),
+      ),
+      ...parseChecks(table.checks),
+    ],
     indices: table.indexes
       .filter((index) => !index.pk)
       .map((index) => ({

@@ -3,7 +3,7 @@ import {
   exportFieldComment,
   getInlineFK,
   parseDefault,
-  uniqueConstraintClause,
+  tableConstraintClause,
 } from "./shared";
 
 import { dbToTypes } from "../../data/datatypes";
@@ -35,7 +35,7 @@ function tablesToSqlite(diagram) {
               .map((f) => `"${f.name}"`)
               .join(", ")})`
           : ""
-      }${inlineFK !== "" ? ",\n" : ""}${inlineFK}${uniqueConstraintClause(table, (s) => `"${s}"`)}\n);\n${table.indices
+      }${inlineFK !== "" ? ",\n" : ""}${inlineFK}${tableConstraintClause(table, (s) => `"${s}"`)}\n);\n${table.indices
         .map(
           (i) =>
             `\nCREATE ${i.unique ? "UNIQUE " : ""}INDEX IF NOT EXISTS "${

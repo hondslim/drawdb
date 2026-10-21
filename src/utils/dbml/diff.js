@@ -5,6 +5,7 @@ const TABLE_KEYS = [
   "color",
   "indices",
   "uniqueConstraints",
+  "checks",
 ];
 
 const FIELD_KEYS = [
@@ -12,6 +13,7 @@ const FIELD_KEYS = [
   "type",
   "size",
   "default",
+  "check",
   "primary",
   "unique",
   "notNull",

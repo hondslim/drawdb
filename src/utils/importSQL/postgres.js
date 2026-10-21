@@ -1,6 +1,7 @@
 import { nanoid } from "nanoid";
 import { Cardinality, Constraint, DB } from "../../data/constants";
 import { dbToTypes } from "../../data/datatypes";
+import { Parser } from "node-sql-parser";
 import { buildSQLFromAST } from "./shared";
 import { findTable, normalizeSchema } from "../schema";
 
@@ -19,6 +20,16 @@ const affinity = {
     { get: (target, prop) => (prop in target ? target[prop] : "BLOB") },
   ),
 };
+
+const sqlParser = new Parser();
+
+function expressionSQL(expr) {
+  try {
+    return sqlParser.exprToSQL(expr, { database: "postgresql" });
+  } catch {
+    return buildSQLFromAST(expr, DB.POSTGRES);
+  }
+}
 
 function resolveTable(tables, ref, currentTable) {
   const schema = normalizeSchema(ref?.db ?? ref?.schema);
@@ -51,6 +62,7 @@ export function fromPostgres(ast, diagramDb = DB.GENERIC) {
         table.fields = [];
         table.indices = [];
         table.uniqueConstraints = [];
+        table.checks = [];
         table.id = nanoid();
         e.create_definitions.forEach((d) => {
           const field = {};
@@ -129,12 +141,20 @@ export function fromPostgres(ast, diagramDb = DB.GENERIC) {
             }
             field.check = "";
             if (d.check) {
-              field.check = buildSQLFromAST(d.check.definition[0], DB.POSTGRES);
+              const expression = expressionSQL(d.check.definition[0]);
+              const name = d.check.constraint || d.constraint?.constraint;
+              if (name) table.checks.push({ name, expression });
+              else field.check = expression;
             }
 
             table.fields.push(field);
           } else if (d.resource === "constraint") {
-            if (d.constraint_type === "primary key") {
+            if (d.constraint_type === "check") {
+              table.checks.push({
+                name: d.constraint ?? "",
+                expression: expressionSQL(d.definition[0]),
+              });
+            } else if (d.constraint_type === "primary key") {
               d.definition.forEach((c) => {
                 table.fields.forEach((f) => {
                   if (f.name === c.column.expr.value && !f.primary) {
@@ -343,6 +363,18 @@ export function fromPostgres(ast, diagramDb = DB.GENERIC) {
     } else if (e.type === "alter") {
       if (Array.isArray(e.expr)) {
         e.expr.forEach((expr) => {
+          if (
+            expr.action === "add" &&
+            expr.create_definitions?.constraint_type?.toLowerCase() === "check"
+          ) {
+            const table = resolveTable(tables, e.table[0]);
+            if (!table) return;
+            table.checks.push({
+              name: expr.create_definitions.constraint ?? "",
+              expression: expressionSQL(expr.create_definitions.definition[0]),
+            });
+            return;
+          }
           if (
             expr.action === "add" &&
             expr.create_definitions.constraint_type.toLowerCase() ===
