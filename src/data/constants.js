@@ -52,6 +52,7 @@ export const Tab = {
   ENUMS: "6",
   VIEWS: "7",
   SQL_HEADER: "8",
+  FUNCTIONS: "9",
 };
 
 export const ObjectType = {
@@ -64,6 +65,7 @@ export const ObjectType = {
   ENUM: 6,
   DBML: 7,
   VIEW: 8,
+  FUNCTION: 9,
 };
 
 export const Action = {

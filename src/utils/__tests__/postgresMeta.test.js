@@ -5,6 +5,9 @@ import {
   postgresTableKey,
   rlsState,
   indexPostgresMeta,
+  functionKey,
+  triggerFunctionKey,
+  triggersByFunction,
 } from "../postgresMeta";
 
 const raw = {
@@ -140,5 +143,37 @@ describe("indexPostgresMeta", () => {
 
   it("returns null without metadata", () => {
     expect(indexPostgresMeta(null)).toBeNull();
+  });
+});
+
+describe("triggersByFunction", () => {
+  const meta = normalizePostgresMeta({
+    triggers: [
+      { table: "digivacc.animals", name: "t1", function: "digivacc.cap" },
+      { table: "digivacc.owners", name: "t2", function: "touch" },
+      { table: "digivacc.animals", name: "t3", function: "public.touch" },
+    ],
+    functions: [{ schema: "digivacc", name: "cap" }, { name: "touch" }],
+  });
+
+  it("keys functions and trigger targets by schema.name, with public as the default", () => {
+    expect(meta.functions.map(functionKey)).toEqual([
+      "digivacc.cap",
+      "public.touch",
+    ]);
+    expect(meta.triggers.map(triggerFunctionKey)).toEqual([
+      "digivacc.cap",
+      "public.touch",
+      "public.touch",
+    ]);
+  });
+
+  it("groups triggers by the function they execute", () => {
+    const byFunction = triggersByFunction(meta);
+    expect(byFunction.get("digivacc.cap").map((t) => t.name)).toEqual(["t1"]);
+    expect(byFunction.get("public.touch").map((t) => t.name)).toEqual([
+      "t2",
+      "t3",
+    ]);
   });
 });

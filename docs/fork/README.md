@@ -18,3 +18,4 @@ Specs and plans for the issues on hondslim/drawdb. One file per issue.
 | #9 Extended Postgres metadata in the share payload     | [09-postgres-metadata.md](09-postgres-metadata.md) |
 | #10 Row-level security                                 | [10-rls.md](10-rls.md)                             |
 | #11 Triggers per table                                 | [11-triggers.md](11-triggers.md)                   |
+| #12 Functions and procedures tab                       | [12-functions-tab.md](12-functions-tab.md)         |

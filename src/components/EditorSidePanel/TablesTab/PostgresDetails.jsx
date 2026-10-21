@@ -1,8 +1,12 @@
 import { Card, Collapse, Tag } from "@douyinfe/semi-ui";
 import { useTranslation } from "react-i18next";
-import { useDiagram } from "../../../hooks";
-import { DB } from "../../../data/constants";
-import { metadataForTable, rlsState } from "../../../utils/postgresMeta";
+import { useDiagram, useSelect } from "../../../hooks";
+import { DB, ObjectType, Tab } from "../../../data/constants";
+import {
+  metadataForTable,
+  rlsState,
+  triggerFunctionKey,
+} from "../../../utils/postgresMeta";
 
 function Expression({ label, value }) {
   if (!value) return null;
@@ -99,7 +103,17 @@ function Section({ title, children }) {
 export default function PostgresDetails({ table }) {
   const { t } = useTranslation();
   const { postgres, database } = useDiagram();
+  const { setSelectedElement } = useSelect();
   if (database !== DB.POSTGRES || !postgres || table.stub) return null;
+
+  const openFunction = (trigger) =>
+    setSelectedElement((prev) => ({
+      ...prev,
+      currentTab: Tab.FUNCTIONS,
+      element: ObjectType.FUNCTION,
+      id: triggerFunctionKey(trigger),
+      open: true,
+    }));
 
   const meta = metadataForTable(postgres, table);
   const state = rlsState(postgres, table);
@@ -125,7 +139,14 @@ export default function PostgresDetails({ table }) {
               className="py-2 border-b last:border-b-0 border-zinc-300"
             >
               <div className="font-semibold break-all">{trigger.name}</div>
-              <TriggerSummary trigger={trigger} />
+              <TriggerSummary
+                trigger={trigger}
+                onFunctionClick={
+                  (postgres.functions ?? []).length
+                    ? () => openFunction(trigger)
+                    : undefined
+                }
+              />
             </div>
           ))}
         </Section>

@@ -124,3 +124,21 @@ export function indexPostgresMeta(meta) {
   return (table) =>
     table.stub ? null : byKey.get(postgresTableKey(table)) ?? NO_METADATA;
 }
+
+export function functionKey(fn) {
+  return `${fn.schema || DEFAULT_SCHEMA}.${fn.name}`;
+}
+
+export function triggerFunctionKey(trigger) {
+  return qualifyTableName(String(trigger.function ?? "").replace(/\(.*$/, ""));
+}
+
+export function triggersByFunction(meta) {
+  const byFunction = new Map();
+  list(meta?.triggers).forEach((trigger) => {
+    const key = triggerFunctionKey(trigger);
+    if (!byFunction.has(key)) byFunction.set(key, []);
+    byFunction.get(key).push(trigger);
+  });
+  return byFunction;
+}
