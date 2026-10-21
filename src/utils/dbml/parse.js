@@ -1,7 +1,8 @@
 import { Parser } from "@dbml/core";
 import { Cardinality, Constraint } from "../../data/constants";
 import { inlineEnumTypeName } from "./types";
-import { normalizeSchema } from "../schema";
+import { findTable, normalizeSchema } from "../schema";
+import { declareStubTables, stubKey } from "./stubs";
 
 const parser = new Parser();
 
@@ -158,7 +159,41 @@ function foldInlineEnums(tables, enums) {
   return enums.filter((en) => !folded.has(en.name));
 }
 
-export function parseDbml(src) {
+function typeStubColumns(tables, relationships) {
+  const stubColumn = (schema, tableName, fieldName) =>
+    findTable(tables, schema, tableName)?.stub &&
+    findTable(tables, schema, tableName).fields.find(
+      (field) => field.name === fieldName,
+    );
+  const sourceColumn = (schema, tableName, fieldName) =>
+    findTable(tables, schema, tableName)?.fields.find(
+      (field) => field.name === fieldName,
+    );
+
+  for (const ref of relationships) {
+    ref.startFieldNames.forEach((startName, i) => {
+      const endName = ref.endFieldNames[i];
+      const pairs = [
+        [
+          stubColumn(ref.startSchemaName, ref.startTableName, startName),
+          sourceColumn(ref.endSchemaName, ref.endTableName, endName),
+        ],
+        [
+          stubColumn(ref.endSchemaName, ref.endTableName, endName),
+          sourceColumn(ref.startSchemaName, ref.startTableName, startName),
+        ],
+      ];
+      for (const [stub, source] of pairs) {
+        if (!stub || !source || stub.type !== "UNKNOWN") continue;
+        stub.type = source.type;
+        stub.size = source.size;
+      }
+    });
+  }
+}
+
+export function parseDbml(dbml) {
+  const { src, stubs } = declareStubTables(dbml);
   const ast = parser.parse(src, "dbmlv2");
 
   const tables = [];
@@ -175,6 +210,11 @@ export function parseDbml(src) {
       })),
     );
   }
+
+  tables.forEach((table) => {
+    if (stubs.has(stubKey(table.schema, table.name))) table.stub = true;
+  });
+  typeStubColumns(tables, relationships);
 
   return {
     tables,

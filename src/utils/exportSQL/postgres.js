@@ -113,7 +113,9 @@ function tablesToPostgres(diagram) {
   const foreignKeyStatements = diagram.references
     .map((r) => {
       const startTable = diagram.tables.find((t) => t.id === r.startTableId);
-      const endTable = diagram.tables.find((t) => t.id === r.endTableId);
+      const endTable = [...diagram.tables, ...(diagram.stubTables ?? [])].find(
+        (t) => t.id === r.endTableId,
+      );
 
       if (!startTable || !endTable) return "";
 

@@ -266,12 +266,14 @@ export default memo(function Table({
                    : isSelected
                      ? "border-solid border-blue-500"
                      : borderColor
-               }`}
+               } ${tableData.stub ? "border-dashed opacity-80" : ""}`}
           style={{ direction: "ltr" }}
         >
           <div
             className="h-[10px] w-full rounded-t-md"
-            style={{ backgroundColor: tableData.color }}
+            style={{
+              backgroundColor: tableData.stub ? "transparent" : tableData.color,
+            }}
           />
           <div
             className={`${
@@ -293,13 +295,22 @@ export default memo(function Table({
                     : undefined
                 }
               >
-                {showSchema && tableData.schema && (
+                {(showSchema || tableData.stub) && tableData.schema && (
                   <span className="font-normal opacity-60">
                     {tableData.schema}.
                   </span>
                 )}
                 {tableData.name}
               </div>
+              {tableData.stub && (
+                <Tag
+                  size="small"
+                  className="group-hover:hidden shrink-0 me-3"
+                  title={t("external_table_notice")}
+                >
+                  {t("external_table")}
+                </Tag>
+              )}
               {tableData.checks?.length > 0 && (
                 <div
                   className="group-hover:hidden shrink-0 pe-3 text-xs font-normal opacity-70 flex items-center gap-1"

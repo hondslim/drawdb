@@ -7,7 +7,7 @@ import { toPostgres } from "./postgres";
 import { toSqlite } from "./sqlite";
 
 export function exportSQL(diagram) {
-  const sql = schemaSQL(diagram);
+  const sql = schemaSQL(withoutStubTables(diagram));
   const header = diagram.sqlHeader?.trim();
   return header ? `${header}\n\n${sql}` : sql;
 }
@@ -29,4 +29,22 @@ function schemaSQL(diagram) {
     default:
       return "";
   }
+}
+
+function withoutStubTables(diagram) {
+  if (!diagram.tables?.some((table) => table.stub)) return diagram;
+  const stubIds = new Set(
+    diagram.tables.filter((table) => table.stub).map((table) => table.id),
+  );
+  const keepsStubReferences = diagram.database === DB.POSTGRES;
+  return {
+    ...diagram,
+    tables: diagram.tables.filter((table) => !table.stub),
+    stubTables: diagram.tables.filter((table) => table.stub),
+    references: (diagram.references ?? []).filter(
+      (r) =>
+        keepsStubReferences ||
+        (!stubIds.has(r.startTableId) && !stubIds.has(r.endTableId)),
+    ),
+  };
 }

@@ -10,3 +10,4 @@ Specs and plans for the issues on hondslim/drawdb. One file per issue.
 | #1 Postgres schemas as a table property                | [01-schemas.md](01-schemas.md)           |
 | #3 CHECK constraints                                   | [03-checks.md](03-checks.md)             |
 | #4 Optional vs mandatory relationship ends             | [04-optionality.md](04-optionality.md)   |
+| #5 Stub tables for FKs that point outside the diagram  | [05-stub-tables.md](05-stub-tables.md)   |

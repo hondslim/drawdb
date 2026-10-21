@@ -22,6 +22,8 @@ export function getIssues(diagram) {
   const duplicateTableNames = {};
 
   diagram.tables.forEach((table) => {
+    if (table.stub) return;
+
     if (table.name === "") {
       issues.push(i18n.t("table_w_no_name"));
     }

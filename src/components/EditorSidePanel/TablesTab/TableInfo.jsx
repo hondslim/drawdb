@@ -176,6 +176,29 @@ export default function TableInfo({ data }) {
     setCommentActiveKey("1");
   };
 
+  if (data.stub) {
+    return (
+      <div>
+        <p className="mb-2">{t("external_table_notice")}</p>
+        <ul className="mb-3 font-mono text-sm">
+          {data.fields.map((field) => (
+            <li key={field.id}>
+              {field.name} {field.type}
+            </li>
+          ))}
+        </ul>
+        <Button
+          type="danger"
+          disabled={layout.readOnly}
+          icon={<IconDeleteStroked />}
+          onClick={() => deleteTable(data.id)}
+        >
+          {t("delete")}
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="flex items-center mb-2.5">

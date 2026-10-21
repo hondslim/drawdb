@@ -6,6 +6,7 @@ const TABLE_KEYS = [
   "indices",
   "uniqueConstraints",
   "checks",
+  "stub",
 ];
 
 const FIELD_KEYS = [

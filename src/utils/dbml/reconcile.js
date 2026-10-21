@@ -192,6 +192,7 @@ function mergeTable(parsed, base, database) {
     color: parsed.color ?? base.color,
     fields: reconcileFields(parsed.fields, base.fields ?? [], database),
     checks: reconcileChecks(parsed.checks, base.checks),
+    stub: parsed.stub || undefined,
     ...reconcileIndexes(parsed.indices, base),
   };
 }
@@ -225,6 +226,7 @@ function createTable(parsed) {
     })),
     uniqueConstraints: [],
     checks: parsed.checks ?? [],
+    ...(parsed.stub && { stub: true }),
     locked: false,
     collapsed: false,
   };

@@ -228,16 +228,17 @@ function refBlock(rel, tables) {
 export function toDBML(diagram) {
   const database = diagram.database;
   const enums = diagram.enums ?? [];
-  const tables = (diagram.tables ?? []).filter(
+  const allTables = (diagram.tables ?? []).filter(
     (table) => (table.fields ?? []).length > 0,
   );
+  const tables = allTables.filter((table) => !table.stub);
   const enumNames = enumNameIndex(enums);
 
   return [
     ...enums.map((en) => enumBlock(en.name, en.values ?? [])),
     ...inlineEnumBlocks(tables),
     ...tables.map((table) => tableBlock(table, database, enumNames)),
-    ...(diagram.relationships ?? []).map((rel) => refBlock(rel, tables)),
+    ...(diagram.relationships ?? []).map((rel) => refBlock(rel, allTables)),
   ]
     .filter(Boolean)
     .join("\n\n");
