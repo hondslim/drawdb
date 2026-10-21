@@ -144,3 +144,43 @@ export function triggersByFunction(meta) {
   });
   return byFunction;
 }
+
+export const PRIVILEGES = [
+  "SELECT",
+  "INSERT",
+  "UPDATE",
+  "DELETE",
+  "TRUNCATE",
+  "REFERENCES",
+  "TRIGGER",
+];
+
+export function grantRoles(meta) {
+  return [...new Set(list(meta?.grants).map((grant) => grant.role))].sort();
+}
+
+export function grantMatrix(meta, role = null) {
+  const rows = new Map();
+  list(meta?.grants)
+    .filter((grant) => !role || grant.role === role)
+    .forEach((grant) => {
+      const key = `${grant.table}\u0000${grant.role}`;
+      if (!rows.has(key)) {
+        rows.set(key, { table: grant.table, role: grant.role, privileges: [] });
+      }
+      const row = rows.get(key);
+      grant.privileges.forEach((privilege) => {
+        const value = String(privilege).toUpperCase();
+        if (!row.privileges.includes(value)) row.privileges.push(value);
+      });
+    });
+
+  return [...rows.values()]
+    .map((row) => ({
+      ...row,
+      privileges: PRIVILEGES.filter((p) => row.privileges.includes(p)),
+    }))
+    .sort(
+      (a, b) => a.table.localeCompare(b.table) || a.role.localeCompare(b.role),
+    );
+}

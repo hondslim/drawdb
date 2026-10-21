@@ -2,7 +2,9 @@ import { Card, Collapse, Tag } from "@douyinfe/semi-ui";
 import { useTranslation } from "react-i18next";
 import { useDiagram, useSelect } from "../../../hooks";
 import { DB, ObjectType, Tab } from "../../../data/constants";
+import GrantTable from "../GrantTable";
 import {
+  grantMatrix,
   metadataForTable,
   rlsState,
   triggerFunctionKey,
@@ -149,6 +151,14 @@ export default function PostgresDetails({ table }) {
               />
             </div>
           ))}
+        </Section>
+      )}
+      {meta.grants.length > 0 && (
+        <Section title={`${t("grants")} (${meta.grants.length})`}>
+          <GrantTable
+            rows={grantMatrix({ grants: meta.grants })}
+            renderLabel={(row) => <span className="font-mono">{row.role}</span>}
+          />
         </Section>
       )}
     </>

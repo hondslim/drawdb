@@ -8,6 +8,8 @@ import {
   functionKey,
   triggerFunctionKey,
   triggersByFunction,
+  grantMatrix,
+  grantRoles,
 } from "../postgresMeta";
 
 const raw = {
@@ -175,5 +177,55 @@ describe("triggersByFunction", () => {
       "t2",
       "t3",
     ]);
+  });
+});
+
+describe("grantMatrix", () => {
+  const meta = normalizePostgresMeta({
+    grants: [
+      {
+        table: "digivacc.animals",
+        role: "app_api",
+        privileges: ["UPDATE", "SELECT"],
+      },
+      { table: "digivacc.animals", role: "app_api", privileges: ["INSERT"] },
+      {
+        table: "public.profiles",
+        role: "authenticated",
+        privileges: ["SELECT"],
+      },
+      { table: "digivacc.owners", role: "app_api", privileges: ["SELECT"] },
+    ],
+  });
+
+  it("lists roles", () => {
+    expect(grantRoles(meta)).toEqual(["app_api", "authenticated"]);
+  });
+
+  it("merges rows per table and role, in privilege order", () => {
+    expect(grantMatrix(meta)).toEqual([
+      {
+        table: "digivacc.animals",
+        role: "app_api",
+        privileges: ["SELECT", "INSERT", "UPDATE"],
+      },
+      { table: "digivacc.owners", role: "app_api", privileges: ["SELECT"] },
+      {
+        table: "public.profiles",
+        role: "authenticated",
+        privileges: ["SELECT"],
+      },
+    ]);
+  });
+
+  it("filters by role", () => {
+    expect(grantMatrix(meta, "authenticated").map((row) => row.table)).toEqual([
+      "public.profiles",
+    ]);
+    expect(
+      grantMatrix(meta, "authenticated").some((row) =>
+        row.table.startsWith("digivacc."),
+      ),
+    ).toBe(false);
   });
 });

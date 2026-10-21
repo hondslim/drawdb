@@ -29,6 +29,7 @@ import i18n from "../../i18n/i18n";
 import DBMLEditor from "./DBMLEditor";
 import SqlHeaderTab from "./SqlHeaderTab";
 import FunctionsTab from "./FunctionsTab";
+import GrantsTab from "./GrantsTab";
 
 export default function SidePanel({ width, resize, setResize }) {
   const { layout, setLayout } = useLayout();
@@ -36,6 +37,7 @@ export default function SidePanel({ width, resize, setResize }) {
   const { selectedElement, setSelectedElement } = useSelect();
   const { database, tablesCount, relationshipsCount, postgres } = useDiagram();
   const functionsCount = postgres?.functions?.length ?? 0;
+  const hasGrants = (postgres?.grants?.length ?? 0) > 0;
   const { areasCount } = useAreas();
   const { notesCount } = useNotes();
   const { typesCount } = useTypes();
@@ -97,6 +99,14 @@ export default function SidePanel({ width, resize, setResize }) {
       });
     }
 
+    if (database === DB.POSTGRES && hasGrants) {
+      tabs.push({
+        tab: t("grants"),
+        itemKey: Tab.GRANTS,
+        component: <GrantsTab />,
+      });
+    }
+
     if (database !== DB.GENERIC) {
       tabs.push({
         tab: t("sql_header"),
@@ -117,6 +127,7 @@ export default function SidePanel({ width, resize, setResize }) {
     enumsCount,
     notesCount,
     functionsCount,
+    hasGrants,
   ]);
 
   const fillHeight = selectedElement.currentTab === Tab.SQL_HEADER;
