@@ -4,7 +4,7 @@
 
 - `?readOnly=true` opens the editor as a viewer. It applies to any editor URL, including `/editor?shareId=X&readOnly=true`.
 - In viewer mode `layout.readOnly` is on, so tables, fields, relationships, enums, notes' text and so on cannot be changed: every control that respects `readOnly` today is disabled, and creating a relationship by dragging from a field is blocked.
-- Moving tables, notes and areas, panning and zooming still work. The new positions are saved to the diagram's existing IndexedDB record.
+- Moving tables, notes and areas, auto-arrange, panning and zooming still work. The new positions are saved to the diagram's existing IndexedDB record.
 - Viewer mode never adds a diagram to IndexedDB from the editor's save path. With a shareId, the share import from #6 keeps one record per share, which is what holds the positions.
 - Today's `readOnly` (cloud diagrams without write access) is unchanged: no moves, no saves.
 - The Share modal's query-parameter options list `readOnly` like the other keys.

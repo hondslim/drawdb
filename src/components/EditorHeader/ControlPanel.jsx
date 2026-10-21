@@ -768,7 +768,10 @@ export default function ControlPanel({
       pan: { x: centerX, y: centerY },
     }));
   };
+  const canArrange = !layout.readOnly || layout.viewer;
+
   const autoArrangeTables = () => {
+    if (!canArrange) return;
     const positions = autoArrange(tables, relationships, settings);
     const positionById = new Map(positions.map((p) => [p.id, p]));
 
@@ -1760,7 +1763,7 @@ export default function ControlPanel({
       },
       auto_arrange: {
         function: autoArrangeTables,
-        disabled: layout.readOnly,
+        disabled: !canArrange,
       },
       auto_connect_fk: {
         function: autoConnectFKs,
@@ -2257,7 +2260,7 @@ export default function ControlPanel({
             <button
               className="py-1 px-2 hover-2 rounded-sm text-xl -mt-0.5 disabled:opacity-50"
               onClick={autoArrangeTables}
-              disabled={layout.readOnly}
+              disabled={!canArrange}
             >
               <i className="fa-solid fa-wand-magic-sparkles" />
             </button>
