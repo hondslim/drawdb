@@ -52,6 +52,7 @@ import {
 } from "../../utils/utils";
 import ResizeHandles from "./ResizeHandles";
 import PostgresBadges from "./PostgresBadges";
+import { childFirst } from "../../utils/relationshipEnds";
 
 const DIFF_BORDERS = {
   added: "border-solid border-green-600",
@@ -705,7 +706,7 @@ function FieldSummary({ field: e, tableId, database }) {
   const resolved = resolveType(database, e.type);
 
   let matchedEndFieldId = null;
-  const rel = relationships.find((r) => {
+  const rel = relationships.map(childFirst).find((r) => {
     if (r.startTableId !== tableId) return false;
     const pair = getRelationshipFields(r).find((p) => p.startFieldId === e.id);
     if (!pair) return false;

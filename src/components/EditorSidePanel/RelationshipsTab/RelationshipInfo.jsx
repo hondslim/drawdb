@@ -1,3 +1,4 @@
+import { fkOnEnd } from "../../../utils/relationshipEnds";
 import {
   Row,
   Col,
@@ -299,11 +300,11 @@ export default function RelationshipInfo({ data }) {
       <div className="flex justify-between items-center mb-1">
         <div className="me-3">
           <span className="font-semibold">{t("primary")}: </span>
-          {endTableName}
+          {fkOnEnd(data.cardinality) ? startTableName : endTableName}
         </div>
         <div className="mx-1">
           <span className="font-semibold">{t("foreign")}: </span>
-          {startTableName}
+          {fkOnEnd(data.cardinality) ? endTableName : startTableName}
         </div>
       </div>
 

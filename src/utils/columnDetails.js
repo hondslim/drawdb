@@ -1,6 +1,7 @@
 import { Constraint } from "../data/constants";
 import { postgresTableKey } from "./postgresMeta";
 import { getRelationshipFields } from "./utils";
+import { childFirst } from "./relationshipEnds";
 
 const LABELLED_DELETES = {
   [Constraint.CASCADE.toLowerCase()]: "CASCADE",
@@ -61,11 +62,12 @@ export function applyColumnMetadata(tables, relationships, meta) {
 
   const tablesById = new Map(nextTables.map((table) => [table.id, table]));
   const nextRelationships = relationships.map((rel) => {
-    const start = tablesById.get(rel.startTableId);
+    const child = childFirst(rel);
+    const start = tablesById.get(child.startTableId);
     if (!start) return rel;
     const items = foreignKeys.get(postgresTableKey(start)) ?? [];
 
-    const columnNames = getRelationshipFields(rel).map(
+    const columnNames = getRelationshipFields(child).map(
       (pair) => start.fields.find((f) => f.id === pair.startFieldId)?.name,
     );
     const fk =

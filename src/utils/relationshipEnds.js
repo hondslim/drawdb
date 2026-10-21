@@ -28,3 +28,22 @@ export function deriveOptionality(rel, startTable, endTable, explicit = {}) {
     [fkKey]: explicit[fkKey] ? true : undefined,
   };
 }
+
+export function childFirst(rel) {
+  if (!fkOnEnd(rel.cardinality)) return rel;
+  const pairs = getRelationshipFields(rel).map((pair) => ({
+    startFieldId: pair.endFieldId,
+    endFieldId: pair.startFieldId,
+  }));
+  return {
+    ...rel,
+    cardinality: Cardinality.MANY_TO_ONE,
+    startTableId: rel.endTableId,
+    endTableId: rel.startTableId,
+    startFieldId: pairs[0].startFieldId,
+    endFieldId: pairs[0].endFieldId,
+    fields: pairs,
+    startOptional: rel.endOptional,
+    endOptional: rel.startOptional,
+  };
+}

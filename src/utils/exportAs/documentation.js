@@ -1,4 +1,5 @@
 import { dbToTypes } from "../../data/datatypes";
+import { childFirst } from "../relationshipEnds";
 import { buildViewSQL, resolveViewColumns } from "../views";
 import { jsonToMermaid } from "./mermaid";
 import { databases } from "../../data/databases";
@@ -14,7 +15,10 @@ function formatMarkdownTable(headers, rows) {
   const separator = colWidths.map((w) => "-".repeat(w)).join(" | ");
   const headerRow = headers.map((h, i) => pad(h, colWidths[i])).join(" | ");
   const dataRows = rows
-    .map((row) => `| ${row.map((cell, i) => pad(cell, colWidths[i])).join(" | ")} |`)
+    .map(
+      (row) =>
+        `| ${row.map((cell, i) => pad(cell, colWidths[i])).join(" | ")} |`,
+    )
     .join("\n");
 
   return `| ${headerRow} |\n| ${separator} |\n${dataRows}`;
@@ -59,7 +63,13 @@ export function jsonToDocumentation(obj) {
           field.id,
         ).join(", ");
 
-        return [`**${field.name}**`, fieldType, settings, references, field.comment ?? ""];
+        return [
+          `**${field.name}**`,
+          fieldType,
+          settings,
+          references,
+          field.comment ?? "",
+        ];
       });
 
       const fieldsTable = formatMarkdownTable(
@@ -101,6 +111,7 @@ export function jsonToDocumentation(obj) {
 
   function relationshipByField(table, relationships, fieldId) {
     return relationships
+      .map(childFirst)
       .filter(
         (r) =>
           r.startTableId === table &&
@@ -125,7 +136,13 @@ export function jsonToDocumentation(obj) {
     databases[obj.database].hasTypes && obj.types.length > 0
       ? obj.types
           .map((type) => {
-            const rows = [[type.name, type.fields.map((f) => f.name).join(", "), type.comment ?? ""]];
+            const rows = [
+              [
+                type.name,
+                type.fields.map((f) => f.name).join(", "),
+                type.comment ?? "",
+              ],
+            ];
             return formatMarkdownTable(["Name", "Columns", "Note"], rows);
           })
           .join("\n")

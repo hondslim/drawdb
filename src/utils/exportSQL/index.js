@@ -5,9 +5,10 @@ import { toMySQL } from "./mysql";
 import { toOracleSQL } from "./oraclesql";
 import { toPostgres } from "./postgres";
 import { toSqlite } from "./sqlite";
+import { childFirst } from "../relationshipEnds";
 
 export function exportSQL(diagram) {
-  const sql = schemaSQL(withoutStubTables(diagram));
+  const sql = schemaSQL(withoutStubTables(withChildFirstReferences(diagram)));
   const header = diagram.sqlHeader?.trim();
   return header ? `${header}\n\n${sql}` : sql;
 }
@@ -48,5 +49,12 @@ function withoutStubTables(diagram) {
         keepsStubReferences ||
         (!stubIds.has(r.startTableId) && !stubIds.has(r.endTableId)),
     ),
+  };
+}
+
+function withChildFirstReferences(diagram) {
+  return {
+    ...diagram,
+    references: (diagram.references ?? []).map(childFirst),
   };
 }
