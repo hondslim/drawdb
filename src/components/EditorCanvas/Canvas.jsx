@@ -17,8 +17,7 @@ import FocusBar from "./FocusBar";
 import ViewDependencies from "./ViewDependencies";
 import DiffGhosts from "./DiffGhosts";
 import { computeDiff } from "../../utils/schemaDiff";
-import { focusView } from "../../utils/focus";
-import { transformForTable } from "../../utils/deepLink";
+import { focusTransform, focusView } from "../../utils/focus";
 import { hasMultipleSchemas } from "../../utils/schema";
 import { indexPostgresMeta } from "../../utils/postgresMeta";
 import View from "./View";
@@ -183,10 +182,24 @@ export default function Canvas() {
     if (!focused) return;
     const canvas = document.getElementById("canvas");
     if (!canvas) return;
+    const table = focused.tables.find((t) => t.id === layout.focus.tableId);
     setTransform(
-      transformForTable(focused.bounds, canvas.getBoundingClientRect()),
+      focusTransform(
+        focused.bounds,
+        {
+          x: table.x,
+          y: table.y,
+          width: getTableWidth(table),
+          height: getTableHeight(
+            table,
+            settings.showComments,
+            focused.relationships,
+          ),
+        },
+        canvas.getBoundingClientRect(),
+      ),
     );
-  }, [focused, layout.focus, setTransform]);
+  }, [focused, layout.focus, setTransform, settings.showComments]);
 
   const tablesById = useMemo(
     () => new Map(shownTables.map((table) => [table.id, table])),

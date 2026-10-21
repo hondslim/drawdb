@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { focusView, neighbourhood } from "../focus";
+import { focusTransform, focusView, neighbourhood } from "../focus";
 
 const rel = (id, from, to) => ({
   id,
@@ -90,5 +90,25 @@ describe("focusView", () => {
     expect(
       focusView(tables, relationships, { tableId: "nope", hops: 1 }, settings),
     ).toBeNull();
+  });
+});
+
+describe("focusTransform", () => {
+  const canvas = { width: 1000, height: 800 };
+  const table = { x: 0, y: 0, width: 200, height: 300 };
+
+  it("fits the neighbourhood when that stays readable", () => {
+    const bounds = { x: 0, y: 0, width: 800, height: 400 };
+    expect(focusTransform(bounds, table, canvas).pan).toEqual({
+      x: 400,
+      y: 200,
+    });
+  });
+
+  it("centres the focused table when fitting everything would be too small", () => {
+    const bounds = { x: 0, y: 0, width: 6000, height: 4000 };
+    const result = focusTransform(bounds, table, canvas);
+    expect(result.pan).toEqual({ x: 100, y: 150 });
+    expect(result.zoom).toBeGreaterThanOrEqual(1);
   });
 });

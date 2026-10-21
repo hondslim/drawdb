@@ -3,7 +3,7 @@
 ## Spec
 
 - Focus mode shows one table and every table within 1, 2 or 3 FK hops of it, following relationships in both directions. Everything else (other tables, their relationships, notes, areas and views) is hidden.
-- The visible tables are laid out with the existing dagre `autoArrange`, and the view fits them. These positions are temporary: they are not saved, and leaving focus mode shows the saved layout again. Tables cannot be dragged while in focus mode.
+- The visible tables are laid out with the existing dagre `autoArrange`. The view fits them when that keeps the zoom at 50% or more. Otherwise it centres the focused table at a readable zoom, as a deep link does. These positions are temporary: they are not saved, and leaving focus mode shows the saved layout again. Tables cannot be dragged while in focus mode.
 - Entering: **Focus** in a table's "more" menu (1 hop), or a deep link `#table=x&focus=N` (`N` = 1, 2 or 3).
 - A bar at the top of the canvas names the focused table, switches between 1, 2 and 3 hops, and has an Exit button. Esc also exits.
 - Focus state lives in the layout, not in the diagram. It is cleared when the focused table no longer exists.

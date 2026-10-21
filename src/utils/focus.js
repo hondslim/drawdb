@@ -1,5 +1,8 @@
 import { autoArrange } from "./autoArrange";
 import { getTableHeight, getTableWidth } from "./utils";
+import { transformForTable } from "./deepLink";
+
+const READABLE_ZOOM = 0.5;
 
 export function neighbourhood(tableId, relationships, hops) {
   const reached = new Set([tableId]);
@@ -58,4 +61,9 @@ export function focusView(tables, relationships, focus, settings) {
     relationships: visibleRelationships,
     bounds: { x: minX, y: minY, width: maxX - minX, height: maxY - minY },
   };
+}
+
+export function focusTransform(bounds, tableRect, canvas) {
+  const fit = transformForTable(bounds, canvas);
+  return fit.zoom >= READABLE_ZOOM ? fit : transformForTable(tableRect, canvas);
 }
