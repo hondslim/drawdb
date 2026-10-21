@@ -137,14 +137,21 @@ function inlineEnumBlocks(tables) {
   return blocks;
 }
 
-function indexEntry(fields, name, unique) {
-  if (!Array.isArray(fields) || !fields.length) return null;
+function indexEntry(fields, name, unique, details = {}) {
+  const expressions = details.expressions ?? [];
+  if (!Array.isArray(fields) || fields.length + expressions.length === 0) {
+    return null;
+  }
 
   const settings = [
     name ? `name: '${escapeQuotes(String(name))}'` : "",
     unique ? "unique" : "",
+    details.method ? `type: ${details.method}` : "",
   ].filter(Boolean);
-  const columns = fields.map((field) => quoteIdentifier(field)).join(", ");
+  const columns = [
+    ...fields.map((field) => quoteIdentifier(field)),
+    ...expressions.map((expression) => `\`${expression}\``),
+  ].join(", ");
 
   return `\t\t(${columns})${settings.length ? ` [ ${settings.join(", ")} ]` : ""}`;
 }
@@ -152,7 +159,7 @@ function indexEntry(fields, name, unique) {
 function indexesBlock(table) {
   const entries = [
     ...(table.indices ?? []).map((index) =>
-      indexEntry(index.fields, index.name, index.unique),
+      indexEntry(index.fields, index.name, index.unique, index),
     ),
     ...(table.uniqueConstraints ?? []).map((constraint) =>
       indexEntry(constraint.fields, constraint.name, true),

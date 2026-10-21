@@ -129,7 +129,7 @@ export function getIssues(diagram) {
       if (index.name.trim() === "") {
         issues.push(i18n.t("empty_index_name", { tableName: table.name }));
       }
-      if (index.fields.length === 0) {
+      if (index.fields.length === 0 && !index.expressions?.length) {
         issues.push(i18n.t("empty_index", { tableName: table.name }));
       }
     });

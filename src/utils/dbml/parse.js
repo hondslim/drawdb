@@ -3,6 +3,7 @@ import { Cardinality, Constraint } from "../../data/constants";
 import { inlineEnumTypeName } from "./types";
 import { findTable, normalizeSchema } from "../schema";
 import { declareStubTables, stubKey } from "./stubs";
+import { indexDetails } from "../indexes";
 
 const parser = new Parser();
 
@@ -95,8 +96,16 @@ function parseTable(table) {
       .filter((index) => !index.pk)
       .map((index) => ({
         name: index.name ?? "",
-        fields: index.columns.map((column) => column.value),
+        fields: index.columns
+          .filter((column) => column.type !== "expression")
+          .map((column) => column.value),
         unique: !!index.unique,
+        ...indexDetails({
+          method: index.type,
+          expressions: index.columns
+            .filter((column) => column.type === "expression")
+            .map((column) => column.value),
+        }),
       })),
   };
 }

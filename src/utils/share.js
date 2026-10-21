@@ -3,6 +3,7 @@ import { tableKey } from "./schema";
 import { getRelationshipFields } from "./utils";
 import { normalizePostgresMeta } from "./postgresMeta";
 import { placeSqlViews, sqlViewTables } from "./sqlViews";
+import { applyIndexMetadata } from "./indexes";
 
 function parsedField(field) {
   return {
@@ -28,8 +29,7 @@ function parsedTable(table) {
     fields: (table.fields ?? []).map(parsedField),
     indices: [
       ...(table.indices ?? []).map((index) => ({
-        name: index.name,
-        fields: index.fields,
+        ...index,
         unique: !!index.unique,
       })),
       ...(table.uniqueConstraints ?? []).map((constraint) => ({
@@ -105,7 +105,10 @@ export function mergeShare(share, stored, shareId) {
       ...sharedState(share),
       gistId: shareId,
       loadedFromGistId: shareId,
-      tables: placeSqlViews(share.tables ?? [], viewTables),
+      tables: applyIndexMetadata(
+        placeSqlViews(share.tables ?? [], viewTables),
+        normalizePostgresMeta(share.postgres),
+      ),
       references: share.relationships ?? [],
       enums: share.enums ?? [],
       notes: share.notes ?? [],
@@ -146,7 +149,10 @@ export function mergeShare(share, stored, shareId) {
     ...stored,
     ...sharedState(share),
     loadedFromGistId: shareId,
-    tables: reconciled.tables,
+    tables: applyIndexMetadata(
+      reconciled.tables,
+      normalizePostgresMeta(share.postgres),
+    ),
     references: reconciled.relationships,
     enums: reconciled.enums,
   };

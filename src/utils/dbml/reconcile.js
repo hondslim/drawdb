@@ -146,11 +146,22 @@ function reconcileFields(parsedFields, baseFields, database) {
 }
 
 function mergeIndexEntry(parsed, base, position) {
+  const kept = Object.fromEntries(
+    Object.entries(base ?? {}).filter(
+      ([key]) => key !== "method" && key !== "expressions",
+    ),
+  );
   return {
-    ...base,
+    ...kept,
     id: position,
     name: parsed.name,
     fields: sameList(base?.fields, parsed.fields) ? base.fields : parsed.fields,
+    ...(parsed.method && { method: parsed.method }),
+    ...(parsed.expressions && {
+      expressions: sameList(base?.expressions, parsed.expressions)
+        ? base.expressions
+        : parsed.expressions,
+    }),
   };
 }
 
@@ -222,9 +233,7 @@ function createTable(parsed) {
     fields: parsed.fields.map(createField),
     indices: parsed.indices.map((index, i) => ({
       id: i,
-      name: index.name,
-      fields: index.fields,
-      unique: index.unique,
+      ...index,
     })),
     uniqueConstraints: [],
     checks: parsed.checks ?? [],

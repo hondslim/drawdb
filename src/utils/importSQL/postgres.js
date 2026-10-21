@@ -5,6 +5,7 @@ import { Parser } from "node-sql-parser";
 import { buildSQLFromAST } from "./shared";
 import { findTable, normalizeSchema } from "../schema";
 import { deriveOptionality } from "../relationshipEnds";
+import { indexDetails } from "../indexes";
 
 const affinity = {
   [DB.POSTGRES]: new Proxy(
@@ -310,10 +311,21 @@ export function fromPostgres(ast, diagramDb = DB.GENERIC) {
         });
         tables.push(table);
       } else if (e.keyword === "index") {
+        const isColumn = (f) => f.type === "column_ref";
         const index = {
           name: e.index,
           unique: e.index_type === "unique",
-          fields: e.index_columns.map((f) => f.column.expr.value),
+          fields: e.index_columns
+            .filter(isColumn)
+            .map((f) => f.column.expr.value),
+          ...indexDetails({
+            method: e.index_using?.type,
+            where: e.where ? expressionSQL(e.where) : null,
+            include: e.include?.columns?.map((c) => c.value),
+            expressions: e.index_columns
+              .filter((f) => !isColumn(f))
+              .map((f) => expressionSQL(f)),
+          }),
         };
 
         const table = resolveTable(tables, e.table);

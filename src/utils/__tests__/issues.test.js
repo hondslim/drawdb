@@ -165,3 +165,13 @@ describe("circular relationships", () => {
     expect(getIssues(cycleDiagram([["a", "a"]]))).toEqual([]);
   });
 });
+
+describe("indexes", () => {
+  it("accepts an index made only of expressions", () => {
+    const d = diagram([field({ name: "email" })]);
+    d.tables[0].indices = [
+      { id: 0, name: "lower_email", fields: [], expressions: ["lower(email)"] },
+    ];
+    expect(getIssues(d)).toEqual([]);
+  });
+});

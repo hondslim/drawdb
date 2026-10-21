@@ -8,6 +8,7 @@ import {
 } from "./shared";
 import { dbToTypes } from "../../data/datatypes";
 import { diagramSchemas } from "../schema";
+import { indexKeySQL } from "../indexes";
 
 function tableRef(table) {
   return table.schema ? `"${table.schema}"."${table.name}"` : `"${table.name}"`;
@@ -94,9 +95,13 @@ function tablesToPostgres(diagram) {
       const indexStatements = table.indices
         .map(
           (i) =>
-            `CREATE ${i.unique ? "UNIQUE " : ""}INDEX "${i.name}"\nON ${tableRef(table)} (${i.fields
-              .map((f) => `"${f}"`)
-              .join(", ")});`,
+            `CREATE ${i.unique ? "UNIQUE " : ""}INDEX "${i.name}"\nON ${tableRef(table)}${
+              i.method ? ` USING ${i.method}` : ""
+            } (${indexKeySQL(i, (f) => `"${f}"`)})${
+              i.include?.length
+                ? `\nINCLUDE (${i.include.map((f) => `"${f}"`).join(", ")})`
+                : ""
+            }${i.where ? `\nWHERE ${i.where}` : ""};`,
         )
         .join("\n");
 

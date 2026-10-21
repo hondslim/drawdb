@@ -154,6 +154,8 @@ const en = {
     no_policies: "No policies",
     no_expression: "No expression",
     triggers: "Triggers",
+    index_method: "Method",
+    index_where: "Predicate, e.g. archived_at IS NULL",
     materialized_view: "materialized view",
     depends_on: "Depends on",
     definition: "Definition",
