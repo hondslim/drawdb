@@ -64,3 +64,104 @@ describe("postgres string defaults", () => {
     ).toHaveLength(1);
   });
 });
+
+function cycleDiagram(edges) {
+  const names = [...new Set(edges.flatMap(([from, to]) => [from, to]))];
+  const tables = names.map((name) => ({
+    id: name,
+    name,
+    fields: [
+      {
+        id: `${name}.id`,
+        name: "id",
+        type: "INTEGER",
+        default: "",
+        primary: true,
+        notNull: true,
+      },
+      ...edges
+        .filter(([from]) => from === name)
+        .map(([, to, opts = {}]) => ({
+          id: `${name}.${to}_id`,
+          name: `${to}_id`,
+          type: "INTEGER",
+          default: "",
+          primary: false,
+          notNull: !opts.nullable,
+        })),
+    ],
+    indices: [],
+  }));
+  const relationships = edges.map(([from, to, opts = {}]) => ({
+    id: `${from}->${to}`,
+    name: `fk_${from}_${to}`,
+    startTableId: from,
+    endTableId: to,
+    startFieldId: `${from}.${to}_id`,
+    endFieldId: `${to}.id`,
+    fields: [{ startFieldId: `${from}.${to}_id`, endFieldId: `${to}.id` }],
+    deferrable: !!opts.deferrable,
+  }));
+  return {
+    database: DB.POSTGRES,
+    tables,
+    relationships,
+    types: [],
+    enums: [],
+    views: [],
+  };
+}
+
+describe("circular relationships", () => {
+  it("reports a cycle of NOT NULL FKs once, naming its tables", () => {
+    const issues = getIssues(
+      cycleDiagram([
+        ["a", "b"],
+        ["b", "a"],
+      ]),
+    );
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toContain("a");
+    expect(issues[0]).toContain("b");
+  });
+
+  it("reports a group with several paths through it once", () => {
+    const issues = getIssues(
+      cycleDiagram([
+        ["a", "b"],
+        ["b", "a"],
+        ["b", "c"],
+        ["c", "b"],
+        ["c", "a"],
+        ["a", "c"],
+      ]),
+    );
+    expect(issues).toHaveLength(1);
+  });
+
+  it("does not report a cycle that passes through a nullable FK", () => {
+    expect(
+      getIssues(
+        cycleDiagram([
+          ["a", "b"],
+          ["b", "a", { nullable: true }],
+        ]),
+      ),
+    ).toEqual([]);
+  });
+
+  it("does not report a cycle that passes through a deferrable FK", () => {
+    expect(
+      getIssues(
+        cycleDiagram([
+          ["a", "b"],
+          ["b", "a", { deferrable: true }],
+        ]),
+      ),
+    ).toEqual([]);
+  });
+
+  it("ignores a self-reference", () => {
+    expect(getIssues(cycleDiagram([["a", "a"]]))).toEqual([]);
+  });
+});

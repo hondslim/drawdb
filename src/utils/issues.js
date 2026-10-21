@@ -305,33 +305,78 @@ export function getIssues(diagram) {
     }
   });
 
-  const visitedTables = new Set();
-
-  function checkCircularRelationships(tableId, visited = []) {
-    if (visited.includes(tableId)) {
-      issues.push(
-        i18n.t("circular_dependency", {
-          refName: diagram.tables.find((t) => t.id === tableId)?.name,
-        }),
-      );
-      return;
-    }
-
-    visited.push(tableId);
-    visitedTables.add(tableId);
-
-    diagram.relationships.forEach((r) => {
-      if (r.startTableId === tableId && r.startTableId !== r.endTableId) {
-        checkCircularRelationships(r.endTableId, [...visited]);
-      }
-    });
-  }
-
-  diagram.tables.forEach((table) => {
-    if (!visitedTables.has(table.id)) {
-      checkCircularRelationships(table.id);
-    }
+  findHardCycles(diagram).forEach((tableNames) => {
+    issues.push(
+      i18n.t("circular_dependency", { refName: tableNames.join(", ") }),
+    );
   });
 
   return issues;
+}
+
+function fkFieldIds(relationship) {
+  if (Array.isArray(relationship.fields) && relationship.fields.length) {
+    return relationship.fields.map((pair) => pair.startFieldId);
+  }
+  return [relationship.startFieldId];
+}
+
+function isHardRelationship(relationship, tablesById) {
+  if (relationship.deferrable) return false;
+  const table = tablesById.get(relationship.startTableId);
+  if (!table) return false;
+  return fkFieldIds(relationship).every(
+    (fieldId) => table.fields.find((f) => f.id === fieldId)?.notNull,
+  );
+}
+
+function findHardCycles(diagram) {
+  const tablesById = new Map(diagram.tables.map((t) => [t.id, t]));
+  const edges = new Map(diagram.tables.map((t) => [t.id, []]));
+  diagram.relationships.forEach((r) => {
+    if (r.startTableId === r.endTableId) return;
+    if (!edges.has(r.startTableId) || !edges.has(r.endTableId)) return;
+    if (!isHardRelationship(r, tablesById)) return;
+    edges.get(r.startTableId).push(r.endTableId);
+  });
+
+  const index = new Map();
+  const lowLink = new Map();
+  const stack = [];
+  const onStack = new Set();
+  const components = [];
+
+  const connect = (tableId) => {
+    index.set(tableId, index.size);
+    lowLink.set(tableId, index.get(tableId));
+    stack.push(tableId);
+    onStack.add(tableId);
+
+    edges.get(tableId).forEach((next) => {
+      if (!index.has(next)) {
+        connect(next);
+        lowLink.set(tableId, Math.min(lowLink.get(tableId), lowLink.get(next)));
+      } else if (onStack.has(next)) {
+        lowLink.set(tableId, Math.min(lowLink.get(tableId), index.get(next)));
+      }
+    });
+
+    if (lowLink.get(tableId) !== index.get(tableId)) return;
+    const component = [];
+    let member;
+    do {
+      member = stack.pop();
+      onStack.delete(member);
+      component.push(member);
+    } while (member !== tableId);
+    if (component.length > 1) components.push(new Set(component));
+  };
+
+  diagram.tables.forEach((t) => {
+    if (!index.has(t.id)) connect(t.id);
+  });
+
+  return components.map((component) =>
+    diagram.tables.filter((t) => component.has(t.id)).map((t) => t.name),
+  );
 }
