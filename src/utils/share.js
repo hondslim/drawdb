@@ -5,6 +5,11 @@ import { normalizePostgresMeta } from "./postgresMeta";
 import { placeSqlViews, sqlViewTables } from "./sqlViews";
 import { applyIndexMetadata } from "./indexes";
 import { applyColumnMetadata } from "./columnDetails";
+import {
+  fitSourceAreas,
+  layoutAreaClusters,
+  placeNewAreaMembers,
+} from "./subjectAreas";
 
 function parsedField(field) {
   return {
@@ -101,7 +106,35 @@ function sharedState(share) {
 }
 
 export function mergeShare(share, stored, shareId) {
-  return withColumnMetadata(mergeTables(share, stored, shareId), share);
+  return withAreas(
+    withColumnMetadata(mergeTables(share, stored, shareId), share),
+    share,
+    stored,
+  );
+}
+
+function withAreas(record, share, stored) {
+  if (!Array.isArray(share.areas)) return record;
+
+  if (!stored) {
+    return {
+      ...record,
+      ...layoutAreaClusters(
+        record.tables,
+        record.references,
+        share.areas,
+        record.areas,
+      ),
+    };
+  }
+
+  const storedIds = new Set((stored.tables ?? []).map((table) => table.id));
+  const tables = placeNewAreaMembers(record.tables, share.areas, storedIds);
+  return {
+    ...record,
+    tables,
+    areas: fitSourceAreas(tables, share.areas, record.areas),
+  };
 }
 
 function withColumnMetadata(record, share) {

@@ -23,3 +23,4 @@ Specs and plans for the issues on hondslim/drawdb. One file per issue.
 | #14 Index details                                      | [14-index-details.md](14-index-details.md)         |
 | #15 Grants per role                                    | [15-grants.md](15-grants.md)                       |
 | #16 Postgres column details                            | [16-column-details.md](16-column-details.md)       |
+| #20 Subject areas from the payload                     | [20-subject-areas.md](20-subject-areas.md)         |
