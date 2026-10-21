@@ -93,6 +93,8 @@ import { jsonToMermaid } from "../../utils/exportAs/mermaid";
 import { isRtl } from "../../i18n/utils/rtl";
 import { jsonToDocumentation } from "../../utils/exportAs/documentation";
 import { IdContext } from "../Workspace";
+import { computeDiff } from "../../utils/schemaDiff";
+import { ghostRects } from "../../utils/diffGhosts";
 import { socials } from "../../data/socials";
 import { toDBML } from "../../utils/exportAs/dbml";
 import { applyDiagramPlan } from "../../utils/dbml/applyPlan";
@@ -165,6 +167,7 @@ export default function ControlPanel({
     database,
     sqlHeader,
     postgres,
+    diffBase,
   } = useDiagram();
   const { enums, setEnums, deleteEnum, addEnum, updateEnum } = useEnums();
   const { types, addType, deleteType, updateType, setTypes } = useTypes();
@@ -723,6 +726,19 @@ export default function ControlPanel({
       minMaxXY.maxX = Math.max(minMaxXY.maxX, area.x + area.width);
       minMaxXY.maxY = Math.max(minMaxXY.maxY, area.y + area.height);
     });
+
+    if (diffBase && layout.showDiff) {
+      const { removedTables } = computeDiff(diffBase, {
+        tables,
+        relationships,
+      });
+      ghostRects(removedTables, tablesToFit).forEach((ghost) => {
+        minMaxXY.minX = Math.min(minMaxXY.minX, ghost.x);
+        minMaxXY.minY = Math.min(minMaxXY.minY, ghost.y);
+        minMaxXY.maxX = Math.max(minMaxXY.maxX, ghost.x + ghost.width);
+        minMaxXY.maxY = Math.max(minMaxXY.maxY, ghost.y + ghost.height);
+      });
+    }
 
     notes.forEach((note) => {
       minMaxXY.minX = Math.min(minMaxXY.minX, note.x);

@@ -12,7 +12,7 @@
 - Canvas, while **Highlight changes** is on (the default when a base exists):
   - Added tables, columns and FKs are green, changed ones amber, each with a tooltip listing what changed.
   - A table with removed columns shows a red "−N" badge, with the column names in the tooltip.
-  - Removed tables are drawn ghosted in red at their base position. If that position is missing or would overlap a current table, they go in a column to the right of the diagram. They cannot be clicked.
+  - Removed tables are drawn ghosted in red at their base position. If that position is missing or would overlap a current table, they go in a column to the right of the diagram. Fit window includes them while changes are highlighted. They cannot be clicked.
   - Removed FKs are drawn as dashed red lines between the tables, when both still exist.
   - Nothing else is highlighted. A branch that adds one column highlights only that column.
 - A **Changes** sidebar tab (shown when a base exists) has the highlight switch and lists every change, grouped as tables, columns and foreign keys, with `+`, `−` or `~`. Clicking an entry that still exists selects that table.
