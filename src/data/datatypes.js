@@ -19,6 +19,16 @@ const intRegex = /^-?\d*$/;
 const doubleRegex = /^-?\d*.?\d+$/;
 const binaryRegex = /^[01]+$/;
 
+function defaultFitsSize(field) {
+  if (field.size === "" || field.size === undefined || field.size === null) {
+    return true;
+  }
+  if (strHasQuotes(field.default)) {
+    return field.default.length - 2 <= field.size;
+  }
+  return field.default.length <= field.size;
+}
+
 /* eslint-disable no-unused-vars */
 const defaultTypesBase = {
   INT: {
@@ -973,12 +983,7 @@ const postgresTypesBase = {
   VARCHAR: {
     type: "VARCHAR",
     color: stringColor,
-    checkDefault: (field) => {
-      if (strHasQuotes(field.default)) {
-        return field.default.length - 2 <= field.size;
-      }
-      return field.default.length <= field.size;
-    },
+    checkDefault: defaultFitsSize,
     hasCheck: true,
     isSized: true,
     hasPrecision: false,
@@ -988,12 +993,7 @@ const postgresTypesBase = {
   TEXT: {
     type: "TEXT",
     color: stringColor,
-    checkDefault: (field) => {
-      if (strHasQuotes(field.default)) {
-        return field.default.length - 2 <= field.size;
-      }
-      return field.default.length <= field.size;
-    },
+    checkDefault: () => true,
     hasCheck: true,
     isSized: false,
     hasPrecision: false,
