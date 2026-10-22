@@ -122,7 +122,7 @@ export function mergeShare(share, stored, shareId) {
 function withAreas(record, share, stored) {
   if (!Array.isArray(share.areas)) return record;
 
-  if (!stored) {
+  if (!stored?.areas?.some((area) => area.source)) {
     return {
       ...record,
       ...layoutAreaClusters(
