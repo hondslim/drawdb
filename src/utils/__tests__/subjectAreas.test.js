@@ -140,6 +140,38 @@ describe("subject areas from the payload", () => {
     expect(merged.areas.map((a) => a.name)).toEqual(["Animals"]);
   });
 
+  it("lays out clusters the first time a stored diagram gets areas", () => {
+    const mine = { id: 0, name: "mine", x: 0, y: 0, width: 10, height: 10 };
+    const stored = {
+      ...mergeShare(share(dbml, null), null, "X"),
+      areas: [mine],
+    };
+    const merged = mergeShare(share(), stored, "X");
+    const find = (name) => merged.areas.find((a) => a.name === name);
+    ["owners", "animals", "vaccinations"].forEach((name) =>
+      expect(
+        inside(
+          merged.tables.find((t) => t.name === name),
+          find("Animals"),
+        ),
+      ).toBe(true),
+    );
+    expect(overlaps(find("Animals"), find("Billing"))).toBe(false);
+    expect(find("mine")).toMatchObject({ width: 10 });
+    expect(find("mine").source).toBeUndefined();
+  });
+
+  it("fits the view to the laid-out areas", () => {
+    const halfWidth = 1500 / record.zoom / 2;
+    const halfHeight = 850 / record.zoom / 2;
+    record.areas.forEach((a) => {
+      expect(a.x).toBeGreaterThanOrEqual(record.pan.x - halfWidth);
+      expect(a.x + a.width).toBeLessThanOrEqual(record.pan.x + halfWidth);
+      expect(a.y).toBeGreaterThanOrEqual(record.pan.y - halfHeight);
+      expect(a.y + a.height).toBeLessThanOrEqual(record.pan.y + halfHeight);
+    });
+  });
+
   it("does nothing without areas", () => {
     const plain = mergeShare(share(dbml, null), null, "X");
     expect(plain.areas).toEqual([]);

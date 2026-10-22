@@ -7,6 +7,8 @@ const PADDING = 40;
 const LABEL_HEIGHT = 40;
 const CLUSTER_GAP = 120;
 const NEW_MEMBER_GAP = 60;
+const FIT_WIDTH = 1500;
+const FIT_HEIGHT = 850;
 const LAYOUT_SETTINGS = { showComments: true };
 
 function membership(tables, groups) {
@@ -75,6 +77,19 @@ function areaFor(group, members, color) {
   };
 }
 
+function fitView(tables, areas) {
+  const box = bounds(tables);
+  const minX = Math.min(box.minX, ...areas.map((a) => a.x));
+  const minY = Math.min(box.minY, ...areas.map((a) => a.y));
+  const maxX = Math.max(box.maxX, ...areas.map((a) => a.x + a.width));
+  const maxY = Math.max(box.maxY, ...areas.map((a) => a.y + a.height));
+  const scale = Math.min(FIT_WIDTH / (maxX - minX), FIT_HEIGHT / (maxY - minY));
+  return {
+    zoom: Math.max(0.05, Math.min(1, Math.floor(scale * 20) / 20)),
+    pan: { x: (minX + maxX) / 2, y: (minY + maxY) / 2 },
+  };
+}
+
 function withIds(areas) {
   return areas.map((area, id) => ({ ...area, id }));
 }
@@ -126,12 +141,14 @@ export function layoutAreaClusters(tables, relationships, groups, extraAreas) {
     rowHeight = Math.max(rowHeight, cluster.height);
   });
 
+  const placedTables = tables.map((t) => {
+    const placed = positions.get(t.id);
+    return placed ? { ...t, x: placed.x, y: placed.y } : t;
+  });
   return {
-    tables: tables.map((t) => {
-      const placed = positions.get(t.id);
-      return placed ? { ...t, x: placed.x, y: placed.y } : t;
-    }),
+    tables: placedTables,
     areas: withIds([...areas, ...(extraAreas ?? [])]),
+    ...fitView(placedTables, areas),
   };
 }
 
